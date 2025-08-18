@@ -1,0 +1,96 @@
+{
+  "name": "pos-kasir-suite-desktop",
+  "version": "1.0.0",
+  "description": "Aplikasi Point of Sale Desktop untuk Kasir Indonesia",
+  "main": "index.js",
+  "scripts": {
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "tauri:build:debug": "tauri build --debug",
+    "dev": "npm run tauri:dev",
+    "build": "npm run tauri:build",
+    "build:debug": "npm run tauri:build:debug",
+    "clean": "rimraf src-tauri/target",
+    "lint": "cargo clippy --manifest-path src-tauri/Cargo.toml",
+    "format": "cargo fmt --manifest-path src-tauri/Cargo.toml",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml",
+    "check": "cargo check --manifest-path src-tauri/Cargo.toml",
+    "install:deps": "npm install && cd ../web && npm install",
+    "setup": "npm run install:deps",
+    "start": "npm run dev"
+  },
+  "keywords": [
+    "pos",
+    "kasir",
+    "point-of-sale",
+    "indonesia",
+    "tauri",
+    "desktop",
+    "electron-alternative"
+  ],
+  "author": "POS Kasir Suite Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pos-kasir/suite.git",
+    "directory": "apps/desktop"
+  },
+  "bugs": {
+    "url": "https://github.com/pos-kasir/suite/issues"
+  },
+  "homepage": "https://github.com/pos-kasir/suite#readme",
+  "devDependencies": {
+    "@tauri-apps/cli": "^1.5.8",
+    "rimraf": "^5.0.5"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "os": [
+    "win32",
+    "darwin",
+    "linux"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "tauri": {
+    "bundle": {
+      "active": true,
+      "targets": "all",
+      "identifier": "com.pos-kasir.suite",
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ]
+    },
+    "security": {
+      "csp": null
+    },
+    "updater": {
+      "active": false
+    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "height": 800,
+        "resizable": true,
+        "title": "POS Kasir Suite",
+        "width": 1200,
+        "minWidth": 800,
+        "minHeight": 600
+      }
+    ]
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/pos-kasir"
+  }
+}

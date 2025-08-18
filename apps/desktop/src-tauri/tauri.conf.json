@@ -1,0 +1,176 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
+  "build": {
+    "beforeBuildCommand": "cd ../web && npm run build",
+    "beforeDevCommand": "cd ../web && npm run dev",
+    "devPath": "http://localhost:3000",
+    "distDir": "../web/out",
+    "withGlobalTauri": true
+  },
+  "package": {
+    "productName": "POS Kasir Suite",
+    "version": "1.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "open": true,
+        "sidecar": true,
+        "scope": [
+          {
+            "name": "nextjs-server",
+            "cmd": "nextjs-server",
+            "args": true
+          },
+          {
+            "name": "watchdog",
+            "cmd": "watchdog",
+            "args": true
+          }
+        ]
+      },
+      "path": {
+        "all": true
+      },
+      "fs": {
+        "all": true,
+        "scope": [
+          "$APPDATA",
+          "$APPDATA/pos-suite",
+          "$APPDATA/pos-suite/*",
+          "$LOCALDATA",
+          "$LOCALDATA/pos-suite",
+          "$LOCALDATA/pos-suite/*",
+          "$TEMP",
+          "$TEMP/pos-suite",
+          "$TEMP/pos-suite/*"
+        ]
+      },
+      "dialog": {
+        "all": false,
+        "ask": true,
+        "confirm": true,
+        "message": true,
+        "open": true,
+        "save": true
+      },
+      "notification": {
+        "all": true
+      },
+      "window": {
+        "all": false,
+        "close": true,
+        "hide": true,
+        "show": true,
+        "maximize": true,
+        "minimize": true,
+        "unmaximize": true,
+        "unminimize": true,
+        "startDragging": true,
+        "print": true
+      },
+      "app": {
+        "all": false,
+        "show": true,
+        "hide": true
+      },
+      "os": {
+        "all": true
+      },
+      "protocol": {
+        "all": false,
+        "asset": true,
+        "assetScope": [
+          "$APPDATA/pos-suite/**",
+          "$LOCALDATA/pos-suite/**"
+        ]
+      }
+    },
+    "bundle": {
+      "active": true,
+      "category": "Business",
+      "copyright": "© 2024 POS Kasir Suite. All rights reserved.",
+      "deb": {
+        "depends": []
+      },
+      "externalBin": [
+        "nextjs-server",
+        "watchdog"
+      ],
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ],
+      "identifier": "com.poskasir.suite",
+      "longDescription": "Aplikasi Point of Sale untuk Kasir Indonesia - Sistem kasir modern dengan fitur lengkap untuk toko dan retail",
+      "macOS": {
+        "entitlements": null,
+        "exceptionDomain": "",
+        "frameworks": [],
+        "providerShortName": null,
+        "signingIdentity": null
+      },
+      "resources": [
+        "sidecar/*"
+      ],
+      "shortDescription": "Sistem kasir modern untuk toko dan retail Indonesia",
+      "targets": "all",
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": "",
+        "tsp": false,
+        "wix": {
+          "language": [
+            "id-ID",
+            "en-US"
+          ],
+          "template": "main.wxs"
+        }
+      }
+    },
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' http://localhost:3000 ws://localhost:3000 https://api.qris.id; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; media-src 'self';"
+    },
+    "updater": {
+      "active": false
+    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "height": 800,
+        "resizable": true,
+        "title": "POS Kasir Suite",
+        "width": 1200,
+        "minWidth": 1024,
+        "minHeight": 768,
+        "center": true,
+        "decorations": true,
+        "alwaysOnTop": false,
+        "skipTaskbar": false,
+        "theme": "Light",
+        "titleBarStyle": "Visible",
+        "hiddenTitle": false,
+        "acceptFirstMouse": false,
+        "tabbingIdentifier": "main",
+        "maximizable": true,
+        "minimizable": true,
+        "closable": true,
+        "url": "http://localhost:3000",
+        "userAgent": "POS-Kasir-Suite/1.0.0",
+        "fileDropEnabled": false,
+        "focus": true,
+        "transparent": false,
+        "maximized": false,
+        "visible": true,
+        "contentProtected": false,
+
+      }
+    ]
+  }
+}

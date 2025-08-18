@@ -1,0 +1,317 @@
+# ======================================================================
+# GITIGNORE - POS KASIR SUITE
+# Aplikasi Point of Sale untuk Kasir Indonesia
+# ======================================================================
+
+# ======================================================================
+# ENVIRONMENT & SECRETS
+# ======================================================================
+
+# Environment files - JANGAN COMMIT!
+
+
+# Secrets dan konfigurasi sensitif
+secrets/
+config/secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cer
+
+# ======================================================================
+# NODE.JS & NPM
+# ======================================================================
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Package manager lock files (keep only one)
+# yarn.lock
+# pnpm-lock.yaml
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# ======================================================================
+# NEXT.JS
+# ======================================================================
+
+# Next.js build output
+.next/
+out/
+
+# Next.js cache
+.next/cache/
+
+# Vercel deployment
+.vercel
+
+# ======================================================================
+# TYPESCRIPT
+# ======================================================================
+
+# TypeScript build info
+*.tsbuildinfo
+next-env.d.ts
+
+# ======================================================================
+# DEVELOPMENT TOOLS
+# ======================================================================
+
+# IDE dan Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Trae AI (IDE yang sedang digunakan)
+.trae/
+
+# ESLint cache
+.eslintcache
+
+# Prettier cache
+.prettiercache
+
+# Stylelint cache
+.stylelintcache
+
+# ======================================================================
+# DATABASE
+# ======================================================================
+
+# Database files lokal
+*.db
+*.sqlite
+*.sqlite3
+*.db3
+
+# Database dumps
+*.sql.gz
+*.dump
+*.backup
+
+# Migration files yang auto-generated
+# migrations/auto-generated/
+
+# ======================================================================
+# LOGS
+# ======================================================================
+
+# Log files
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime logs
+runtime.log
+error.log
+access.log
+
+# ======================================================================
+# UPLOADS & TEMPORARY FILES
+# ======================================================================
+
+# File uploads
+uploads/
+temp/
+tmp/
+
+# Images yang di-upload user
+public/uploads/
+public/images/uploads/
+
+# Temporary files
+*.tmp
+*.temp
+
+# ======================================================================
+# BACKUP & EXPORTS
+# ======================================================================
+
+# Database backups
+backups/
+*.backup
+*.bak
+
+# Data exports
+exports/
+*.csv.export
+*.xlsx.export
+*.json.export
+
+# ======================================================================
+# OPERATING SYSTEM
+# ======================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ======================================================================
+# TESTING
+# ======================================================================
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Test results
+test-results/
+junit.xml
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
+# ======================================================================
+# BUILD & DISTRIBUTION
+# ======================================================================
+
+# Build directories
+build/
+dist/
+out/
+
+# Static files yang di-generate
+public/static/generated/
+
+# ======================================================================
+# CACHE
+# ======================================================================
+
+# Various cache directories
+.cache/
+.parcel-cache/
+.npm/
+.yarn/cache/
+.pnpm-store/
+
+# Turbo cache
+.turbo/
+
+# ======================================================================
+# MONITORING & ANALYTICS
+# ======================================================================
+
+# Sentry
+.sentryclirc
+
+# Bundle analyzer
+bundle-analyzer-report.html
+
+# ======================================================================
+# TAURI (Desktop App)
+# ======================================================================
+
+# Tauri build
+src-tauri/target/
+src-tauri/Cargo.lock
+
+# ======================================================================
+# PRINTER & HARDWARE
+# ======================================================================
+
+# Printer drivers dan konfigurasi
+printer-drivers/
+printer-config/
+*.prn
+
+# ======================================================================
+# CUSTOM PROJECT FILES
+# ======================================================================
+
+# File dokumentasi yang tidak perlu di-commit
+TODO.md
+NOTES.md
+DEV-NOTES.md
+
+# File testing lokal
+test-data/
+mock-data/
+sample-data/
+
+# File konfigurasi development lokal
+local-config/
+dev-config/
+
+# ======================================================================
+# SECURITY
+# ======================================================================
+
+# SSH keys
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+
+# SSL certificates
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# API keys dan tokens
+api-keys.json
+tokens.json
+credentials.json
+
+# ======================================================================
+# END OF GITIGNORE
+# ======================================================================
+
+# Catatan:
+# - File ini dibuat khusus untuk POS Kasir Suite
+# - Pastikan tidak ada file sensitif yang ter-commit
+# - Review berkala untuk menambah pattern baru
+# - Gunakan git check-ignore untuk test pattern

@@ -1,0 +1,284 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fluent UI Base Styles */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  
+  html {
+    font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #323130;
+    background-color: #faf9f8;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Overflow hidden hanya untuk halaman kasir, bukan login */
+  body:has(.kasir-layout) {
+    overflow: hidden;
+  }
+  
+  /* Disable text selection untuk UI kasir */
+  .no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Focus styles */
+  .focus-visible {
+    outline: 2px solid #0078d4;
+    outline-offset: 2px;
+  }
+}
+
+/* Komponen Kasir */
+@layer components {
+  /* Layout kasir */
+  .kasir-layout {
+    @apply h-screen flex flex-col bg-fluent-neutral-10;
+  }
+  
+  .kasir-header {
+    @apply bg-white border-b border-fluent-neutral-40 px-4 py-2 shadow-fluent-2;
+  }
+  
+  .kasir-main {
+    @apply flex-1 flex overflow-hidden;
+  }
+  
+  .kasir-left-panel {
+    @apply w-1/2 border-r border-fluent-neutral-40 bg-white;
+  }
+  
+  .kasir-right-panel {
+    @apply w-1/2 bg-fluent-neutral-10;
+  }
+  
+  .kasir-footer {
+    @apply bg-fluent-neutral-20 border-t border-fluent-neutral-40 px-4 py-2 text-body-small;
+  }
+  
+  /* Tabel produk dan keranjang */
+  .table-dense {
+    @apply text-body-small;
+  }
+  
+  .table-dense th {
+    @apply py-1 px-2 bg-fluent-neutral-20 border-b border-fluent-neutral-40 font-semibold;
+  }
+  
+  .table-dense td {
+    @apply py-1 px-2 border-b border-fluent-neutral-30;
+  }
+  
+  .table-dense tr:hover {
+    @apply bg-fluent-neutral-10;
+  }
+  
+  .table-dense tr.selected {
+    @apply bg-fluent-brand-160;
+  }
+  
+  /* Input barcode */
+  .barcode-input {
+    @apply w-full px-3 py-2 border border-fluent-neutral-60 rounded-fluent 
+           focus:border-fluent-brand-80 focus:outline-none focus:ring-2 focus:ring-fluent-brand-100/20;
+  }
+  
+  /* Tombol kasir */
+  .btn-kasir {
+    @apply px-4 py-2 rounded-fluent font-medium text-body-medium transition-colors 
+           focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  
+  .btn-primary {
+    @apply btn-kasir bg-fluent-brand-80 text-white hover:bg-fluent-brand-70 
+           focus:ring-fluent-brand-100;
+  }
+  
+  .btn-secondary {
+    @apply btn-kasir bg-fluent-neutral-20 text-fluent-neutral-130 hover:bg-fluent-neutral-30 
+           focus:ring-fluent-neutral-100;
+  }
+  
+  .btn-success {
+    @apply btn-kasir bg-status-success text-white hover:bg-green-700 
+           focus:ring-green-500;
+  }
+  
+  .btn-warning {
+    @apply btn-kasir bg-status-warning text-white hover:bg-orange-600 
+           focus:ring-orange-500;
+  }
+  
+  .btn-error {
+    @apply btn-kasir bg-status-error text-white hover:bg-red-700 
+           focus:ring-red-500;
+  }
+  
+  /* Status indicators */
+  .status-online {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-body-small 
+           bg-green-100 text-green-800;
+  }
+  
+  .status-offline {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-body-small 
+           bg-red-100 text-red-800;
+  }
+  
+  .status-hold {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-body-small 
+           bg-orange-100 text-orange-800;
+  }
+  
+  /* Ringkasan total */
+  .total-summary {
+    @apply bg-white rounded-fluent-large p-4 shadow-fluent-4;
+  }
+  
+  .total-row {
+    @apply flex justify-between items-center py-1;
+  }
+  
+  .total-label {
+    @apply text-body-medium text-fluent-neutral-120;
+  }
+  
+  .total-value {
+    @apply text-body-medium font-semibold text-fluent-neutral-160;
+  }
+  
+  .total-final {
+    @apply text-title-medium font-bold text-fluent-brand-80;
+  }
+  
+  /* Format mata uang */
+  .currency {
+    @apply font-mono;
+  }
+  
+  .currency-large {
+    @apply text-title-large font-bold font-mono;
+  }
+  
+  /* Keypad numerik */
+  .keypad {
+    @apply grid grid-cols-3 gap-2 p-4;
+  }
+  
+  .keypad-btn {
+    @apply aspect-square flex items-center justify-center text-title-medium font-semibold 
+           bg-fluent-neutral-20 hover:bg-fluent-neutral-30 rounded-fluent 
+           transition-colors cursor-pointer select-none;
+  }
+  
+  .keypad-btn:active {
+    @apply bg-fluent-neutral-40;
+  }
+  
+  /* Dialog dan modal */
+  .dialog-overlay {
+    @apply fixed inset-0 bg-black/50 flex items-center justify-center z-50;
+  }
+  
+  .dialog-content {
+    @apply bg-white rounded-fluent-large shadow-fluent-64 max-w-md w-full mx-4;
+  }
+  
+  .dialog-header {
+    @apply px-6 py-4 border-b border-fluent-neutral-40;
+  }
+  
+  .dialog-title {
+    @apply text-title-medium font-semibold text-fluent-neutral-160;
+  }
+  
+  .dialog-body {
+    @apply px-6 py-4;
+  }
+  
+  .dialog-footer {
+    @apply px-6 py-4 border-t border-fluent-neutral-40 flex justify-end gap-3;
+  }
+}
+
+/* Utilities */
+@layer utilities {
+  /* Scrollbar styling */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #c8c8c8 #f5f5f5;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: #f5f5f5;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #c8c8c8;
+    border-radius: 4px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #b3b3b3;
+  }
+  
+  /* Print styles */
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+    
+    .print-only {
+      display: block !important;
+    }
+    
+    body {
+      background: white !important;
+      color: black !important;
+    }
+  }
+  
+  /* Responsive untuk resolusi kasir */
+  @media (max-width: 1366px) {
+    .kasir-layout {
+      font-size: 13px;
+    }
+    
+    .table-dense th,
+    .table-dense td {
+      @apply py-0.5 px-1;
+    }
+  }
+  
+  /* High contrast mode */
+  @media (prefers-contrast: high) {
+    .btn-kasir {
+      border: 2px solid currentColor;
+    }
+  }
+  
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
