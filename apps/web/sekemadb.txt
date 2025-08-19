@@ -1,0 +1,252 @@
+POS Database Schema Documentation
+Version: 1.0
+
+Overview
+- Purpose: Centralized PostgreSQL schema for a multi-branch Point of Sale (POS) system, covering master data, inventory, purchasing, sales, cash/bank, and accounting.
+- Requirements: PostgreSQL 12+ (generated columns), extensions `uuid-ossp`, `pg_trgm`.
+- Security: Row Level Security (RLS) enabled on key tables with a branch-based access model.
+
+Quick Start
+1) Create database and install extensions:
+   - CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+   - CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+2) Run schema file in order as-is: database/pos_database.sql (includes tables, indexes, RLS, sequences, functions, triggers, and seed data).
+3) Ensure role membership for RLS:
+   - The script creates NOLOGIN role `authenticated_users` if missing.
+   - Grant application/user roles membership: GRANT authenticated_users TO app_user;
+4) Set session variable per request to activate policies:
+   - SET app.current_user_id = '<user-uuid>';
+
+Connection Configuration
+- Example env var for development:
+  DATABASE_URL="postgresql://arkananta:Arkananta123%21%40%23%23%40%21@43.163.2.32:5432/ftpos"
+- Notes:
+  - The password is URL-encoded. Decoded value: Arkananta123!@##@!
+  - Store secrets securely (env vars or secret manager). Avoid committing real credentials.
+
+Extensions
+- uuid-ossp: Provides `uuid_generate_v4()` used as default primary keys.
+- pg_trgm: Enables trigram indexes for fast search on text fields (e.g., product name).
+
+Core Reference & Organization
+- companies: Company master.
+  - Columns: id (UUID pk), name, tax_id, address, phone, email, created_at, updated_at.
+  - Triggers: update_updated_at_column on UPDATE.
+- branches: Branch under company, time zone and activation state.
+  - Columns: id, company_id → companies.id, code (UNIQUE), name, address, phone, timezone, is_active, created_at, updated_at.
+  - RLS: ENABLED.
+  - Triggers: update_updated_at_column.
+- users: Application users.
+  - Columns: id, username (UNIQUE), password_hash, full_name, email, phone, is_active, last_login_at, created_at, updated_at.
+  - Triggers: update_updated_at_column.
+- roles: Role master; permissions assigned via role_permissions.
+  - Columns: id, name (UNIQUE), description, created_at.
+- permissions: Permission catalog grouped by module.
+  - Columns: id, code (UNIQUE), description, module, created_at.
+- user_roles: Relation of users to roles, optionally per-branch.
+  - Columns: id, user_id → users.id, role_id → roles.id, branch_id → branches.id, created_at.
+  - Constraints: UNIQUE(user_id, role_id, branch_id).
+- role_permissions: Map roles to permissions.
+  - Columns: id, role_id → roles.id, permission_id → permissions.id, created_at.
+  - Constraints: UNIQUE(role_id, permission_id).
+
+Master Data
+- categories: Product category tree (self-referencing parent_id), activation state.
+  - Columns: id, name, parent_id → categories.id, is_active, created_at, updated_at.
+  - Triggers: update_updated_at_column.
+- units: Measurement units.
+  - Columns: id, code (UNIQUE), name, created_at.
+- tax_groups: Tax definitions.
+  - Columns: id, name, rate DECIMAL(5,4), inclusive BOOLEAN, is_active, created_at.
+- products: Product master with category, unit, tax group, and stock tracking.
+  - Columns: id, sku (UNIQUE), barcode, name, description, category_id → categories.id, unit_id → units.id,
+             tax_group_id → tax_groups.id, is_active, track_stock, cost_method ('avg'|'fifo'),
+             min_stock, max_stock, created_at, updated_at.
+  - Triggers: update_updated_at_column.
+- product_prices: Multi-level pricing per product, optionally per-branch.
+  - Columns: id, product_id → products.id, price_level (default 'retail'), branch_id → branches.id,
+             currency (default 'IDR'), price, cost, effective_from, effective_to, created_at.
+  - Constraints: UNIQUE(product_id, price_level, branch_id, effective_from).
+- customers: Customer master with credit limit and price level.
+  - Columns: id, code (UNIQUE), name, phone, email, address, credit_limit, price_level, is_active,
+             created_at, updated_at.
+  - Triggers: update_updated_at_column.
+- suppliers: Supplier master with payment terms.
+  - Columns: id, code (UNIQUE), name, phone, email, address, payment_terms, is_active,
+             created_at, updated_at.
+  - Triggers: update_updated_at_column.
+
+Inventory
+- stocks: Current stock per product per branch with costing fields.
+  - Columns: id, product_id → products.id, branch_id → branches.id, quantity_on_hand, avg_cost, last_cost, updated_at.
+  - Constraints: UNIQUE(product_id, branch_id).
+  - RLS: ENABLED.
+  - Triggers: update_updated_at_column.
+- stock_movements: Movement ledger (in/out/adjust/transfer).
+  - Columns: id, product_id → products.id, branch_id → branches.id, movement_type ('in'|'out'|'adj'|'transfer_out'|'transfer_in'),
+             reference_type, reference_id, quantity, cost, note, created_by → users.id, created_at.
+  - RLS: ENABLED.
+- stock_opnames: Stock counts/opnames.
+  - Columns: id, branch_id → branches.id, opname_no (UNIQUE), scheduled_at, status ('draft'|'posted'|'cancelled'),
+             notes, created_by → users.id, posted_by → users.id, posted_at, created_at.
+- stock_opname_lines: Lines under stock_opnames with generated adjustment quantity.
+  - Columns: id, opname_id → stock_opnames.id (ON DELETE CASCADE), product_id → products.id,
+             system_qty, counted_qty, adjustment_qty (GENERATED ALWAYS AS counted_qty - system_qty), cost, notes, created_at.
+- transfers: Inter-branch transfer documents.
+  - Columns: id, transfer_no (UNIQUE), from_branch_id → branches.id, to_branch_id → branches.id,
+             status ('draft'|'shipped'|'received'|'cancelled'), notes, shipped_at, received_at, created_by → users.id, created_at.
+- transfer_lines: Lines for transfers.
+  - Columns: id, transfer_id → transfers.id (ON DELETE CASCADE), product_id → products.id, quantity, cost, created_at.
+
+Purchasing
+- purchase_orders: PO document.
+  - Columns: id, po_no (UNIQUE), supplier_id → suppliers.id, branch_id → branches.id,
+             status ('draft'|'sent'|'partial'|'received'|'cancelled'), subtotal, tax_amount, total,
+             ordered_at, expected_at, notes, created_by → users.id, created_at.
+- purchase_order_lines: PO lines with computed line_total.
+  - Columns: id, po_id → purchase_orders.id (ON DELETE CASCADE), product_id → products.id,
+             quantity, price, discount, line_total (GENERATED), created_at.
+- goods_receipts: GRN document.
+  - Columns: id, grn_no (UNIQUE), po_id → purchase_orders.id, supplier_id → suppliers.id,
+             branch_id → branches.id, subtotal, tax_amount, total, received_at, notes, created_by → users.id, created_at.
+- goods_receipt_lines: GRN lines with computed line_total.
+  - Columns: id, grn_id → goods_receipts.id (ON DELETE CASCADE), product_id → products.id,
+             quantity, price, line_total (GENERATED), created_at.
+- ap_invoices: Accounts payable invoices.
+  - Columns: id, invoice_no (UNIQUE), supplier_id → suppliers.id, branch_id → branches.id,
+             subtotal, tax_amount, total, due_date, status ('unpaid'|'partial'|'paid'|'overdue'), notes, created_at.
+- ap_payments: Payments against AP invoices.
+  - Columns: id, payment_no (UNIQUE), ap_invoice_id → ap_invoices.id, payment_method, amount, reference,
+             paid_at, created_by → users.id, created_at.
+
+Sales / POS
+- pos_sessions: Cashier sessions with opening/closing balances.
+  - Columns: id, session_no (UNIQUE), branch_id → branches.id, cashier_id → users.id,
+             opened_at, opening_cash, closed_at, closing_cash, expected_cash, cash_difference,
+             status ('open'|'closed'), notes, created_at.
+  - RLS: ENABLED.
+- pos_orders: POS sales orders with amounts and lifecycle.
+  - Columns: id, order_no (UNIQUE), branch_id → branches.id, session_id → pos_sessions.id,
+             customer_id → customers.id, cashier_id → users.id, status ('draft'|'paid'|'void'|'refund'),
+             subtotal, discount_amount, tax_amount, total, paid_total, change_amount, notes,
+             paid_at, voided_at, voided_by → users.id, void_reason, created_at.
+  - RLS: ENABLED, policy described under Security.
+- pos_order_lines: Lines with computed line_total.
+  - Columns: id, order_id → pos_orders.id (ON DELETE CASCADE), product_id → products.id,
+             quantity, price, discount_amount, tax_amount, line_total (GENERATED), created_at.
+- pos_payments: Payment entries for each order.
+  - Columns: id, order_id → pos_orders.id (ON DELETE CASCADE),
+             payment_method ('cash'|'card'|'ewallet'|'transfer'|'voucher'), amount, reference, captured_at, created_at.
+- pos_refunds: Refund records linking to original order.
+  - Columns: id, refund_no (UNIQUE), original_order_id → pos_orders.id, branch_id → branches.id,
+             amount, reason, processed_by → users.id, processed_at, created_at.
+
+Cash & Bank
+- cash_movements: Cash in/out (outside order settlement) with session link optional.
+  - Columns: id, branch_id → branches.id, session_id → pos_sessions.id,
+             movement_type ('in'|'out'), amount, reason, reference, moved_at, created_by → users.id, created_at.
+- bank_accounts: Bank accounts per branch.
+  - Columns: id, branch_id → branches.id, bank_name, account_no, account_name, is_active, created_at.
+- bank_transactions: Bank debits/credits.
+  - Columns: id, bank_account_id → bank_accounts.id, transaction_type ('debit'|'credit'),
+             amount, reference, description, transacted_at, created_at.
+
+Accounting
+- accounts: Chart of accounts (COA), hierarchical via parent_id.
+  - Columns: id, code (UNIQUE), name, account_type ('asset'|'liability'|'equity'|'revenue'|'expense'), parent_id → accounts.id,
+             is_active, created_at.
+- journal_entries: Journal headers with references.
+  - Columns: id, entry_no (UNIQUE), branch_id → branches.id, memo, reference_type, reference_id, posted_at, created_by → users.id, created_at.
+  - RLS: ENABLED.
+- journal_lines: Journal lines with debit/credit checks.
+  - Columns: id, journal_id → journal_entries.id (ON DELETE CASCADE), account_id → accounts.id,
+             debit (>=0), credit (>=0); constraints prevent both debit and credit > 0 in same line.
+- account_balances: Periodic balances for reporting.
+  - Columns: id, account_id → accounts.id, branch_id → branches.id,
+             period_year, period_month, opening_balance, debit_total, credit_total, closing_balance, created_at.
+  - Constraints: UNIQUE(account_id, branch_id, period_year, period_month).
+
+Promotions & Others
+- promotions: Promotions with flexible JSON criteria and period.
+  - Columns: id, name, promo_type ('percent'|'amount'|'bundle'|'mixmatch'|'bogo'), criteria_json (JSONB),
+             discount_value, min_quantity, min_amount, period_from, period_to, is_active, created_at.
+- audits: Audit trail for CRUD actions.
+  - Columns: id, user_id → users.id, action, table_name, record_id, old_values (JSONB), new_values (JSONB), ip_address (INET), user_agent, created_at.
+- attachments: External files linked to records.
+  - Columns: id, reference_type, reference_id, file_name, mime_type, file_size, file_url, created_at.
+
+Indexes (Key Highlights)
+- products: sku, barcode (partial), name (GIN with gin_trgm_ops), category_id, is_active (partial).
+- stocks/movements: product_id+branch_id, product_id, branch_id, created_at.
+- POS: branch_id, session_id, cashier_id, created_at, status, and on lines for order_id/product_id.
+- Journals: branch_id, posted_at, journal_id, account_id.
+- user_roles: user_id, branch_id.
+
+Security & RLS
+- Enabled on: branches, stocks, stock_movements, pos_orders, pos_sessions, journal_entries.
+- Roles:
+  - `authenticated_users` (NOLOGIN) created if missing by the script. Use this as a group role.
+  - Grant app/DB roles membership: GRANT authenticated_users TO app_user;
+- Example policy (implemented):
+  - `pos_orders_branch_policy` FOR ALL TO authenticated_users USING (
+      branch_id IN (SELECT branch_id FROM user_roles WHERE user_id = current_setting('app.current_user_id')::UUID)
+    )
+- Session requirement: set current user UUID each request/session:
+  - SET LOCAL app.current_user_id = '00000000-0000-0000-0000-000000000001';
+- Note: Other RLS-enabled tables default to owner-only access. Add similar branch-based policies as needed to read/write from application roles.
+
+Sequences & Numbering
+- Sequences: pos_order_seq, po_seq, grn_seq, transfer_seq, session_seq.
+- Function `generate_order_no(branch_code TEXT, prefix TEXT)`:
+  - Uses `nextval('pos_order_seq')` + current date (YYYYMMDD) to return `BRANCH-PREFIX-YYYYMMDD-XXXXXX`.
+  - Example: SELECT generate_order_no('JKT01', 'SO');  -- JKT01-SO-20250101-000123
+
+Functions & Triggers
+- update_updated_at_column(): Sets NEW.updated_at = NOW() on UPDATE.
+  - Applied to: companies, branches, users, categories, products, customers, suppliers, stocks.
+- generated columns:
+  - purchase_order_lines.line_total = (quantity * price) - discount.
+  - goods_receipt_lines.line_total = (quantity * price).
+  - pos_order_lines.line_total = (quantity * price) - discount_amount + tax_amount.
+  - stock_opname_lines.adjustment_qty = counted_qty - system_qty.
+
+Seed Data (Defaults)
+- companies: PT. Contoh Retail (id: ...0001)
+- branches: JKT01 under default company.
+- roles: Super Admin, Branch Manager, Cashier, Warehouse Staff, Accountant.
+- permissions: pos.create, pos.void, pos.refund, inventory.manage, reports.view, users.manage, products.manage.
+- admin user: username=admin, password_hash (bcrypt) for 'admin123'.
+- user_roles: admin as Super Admin on JKT01.
+- units: PCS, KG, LTR, BOX, SET.
+- tax_groups: PPN 11%, Non-Taxable.
+- categories: Makanan & Minuman, Elektronik, Pakaian, Kesehatan & Kecantikan, Rumah Tangga.
+- accounts (COA): samples for Cash, Bank, AR, Inventory, AP, Tax Output, Sales, COGS, Sales Discount.
+- customers: default UMUM.
+
+Operational Guidance
+- Running migrations: Apply incremental ALTER/CREATE statements; avoid dropping production tables.
+- Backups: Use pg_dump with schema+data regularly; verify restores.
+- Performance:
+  - Keep `pg_trgm` index on product name for search.
+  - Analyze query plans on large tables (pos_orders, stock_movements, journal_lines).
+- Data integrity:
+  - Respect CHECK constraints (movement types, payment methods, account types, statuses).
+  - Generated columns auto-compute; do not try to insert values explicitly into generated fields.
+
+Security Guidance
+- Always set `app.current_user_id` in the DB session used by the app layer.
+- Use least-privilege DB roles; grant them to `authenticated_users` and add explicit RLS policies as needed.
+- Do not expose raw DATABASE_URL in code; use environment variables.
+
+Examples
+- Set session user and query permitted orders:
+  SET LOCAL app.current_user_id = '00000000-0000-0000-0000-000000000001';
+  SELECT id, order_no FROM pos_orders;
+
+- Grant application role:
+  CREATE ROLE app_user LOGIN PASSWORD 'secure-password';
+  GRANT authenticated_users TO app_user;
+
+Change Log
+- 1.0: Initial documentation generated to match database/pos_database.sql, including creation of `authenticated_users` role guard and RLS notes.
+

@@ -13,6 +13,7 @@ import { ThemeProvider } from '@/lib/theme/theme-provider';
 import { KeyboardProvider } from '@/lib/keyboard/keyboard-provider';
 import { PrintProvider } from '@/lib/print/print-provider';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { ShortcutsHelp } from '@/components/keyboard/shortcuts-help';
 
 interface ClientProvidersProps {
   children: React.ReactNode;
@@ -39,6 +40,9 @@ export function ClientProviders({ children }: ClientProvidersProps) {
                   <main id="main-content" className="flex-1">
                     {children}
                   </main>
+                  
+                  {/* Keyboard Shortcuts Help */}
+                  <ShortcutsHelp />
                   
                   {/* Toast Notifications */}
                   <Toaster

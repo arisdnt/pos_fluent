@@ -246,6 +246,12 @@ function POSPageContent() {
   const [showCustomerDialog, setShowCustomerDialog] = useState(false);
   const [showProductSearch, setShowProductSearch] = useState(false);
   
+  // Keyboard navigation states
+  const [selectedProductIndex, setSelectedProductIndex] = useState(-1);
+  const [showQuantityModal, setShowQuantityModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [quantityInput, setQuantityInput] = useState('1');
+  
   // Filtered products based on search
   const filteredProducts = mockProducts.filter(product =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -272,6 +278,36 @@ function POSPageContent() {
 
   const totals = calculateCartTotals();
   const change = amountPaid - totals.total;
+
+  // ======================================================================
+  // QUANTITY MODAL HANDLERS
+  // ======================================================================
+
+  const handleQuantitySubmit = () => {
+    if (selectedProduct && quantityInput) {
+      const quantity = parseInt(quantityInput);
+      if (quantity > 0) {
+        addToCart(selectedProduct, quantity);
+        setShowQuantityModal(false);
+        setSelectedProduct(null);
+        setQuantityInput('1');
+        setSelectedProductIndex(-1);
+        // Reset search and focus back to search input
+        setSearchQuery('');
+        setBarcodeInput('');
+        setTimeout(() => barcodeInputRef.current?.focus(), 100);
+      }
+    }
+  };
+
+  const handleQuantityCancel = () => {
+    setShowQuantityModal(false);
+    setSelectedProduct(null);
+    setQuantityInput('1');
+    setSelectedProductIndex(-1);
+    // Focus back to search input
+    setTimeout(() => barcodeInputRef.current?.focus(), 100);
+  };
 
   // ======================================================================
   // CART OPERATIONS
@@ -471,6 +507,7 @@ function POSPageContent() {
         setShowPaymentDialog(false);
         setShowCustomerDialog(false);
         setShowProductSearch(false);
+        setShowQuantityModal(false);
       }
     };
 
@@ -506,39 +543,56 @@ function POSPageContent() {
                   const value = e.target.value;
                   setBarcodeInput(value);
                   setSearchQuery(value);
+                  setSelectedProductIndex(-1); // Reset selection when typing
                 }}
-                onKeyPress={(e) => {
+                onKeyDown={(e) => {
                   if (e.key === 'Enter') {
+                    e.preventDefault();
                     const value = e.currentTarget.value;
+                    // Jika ada produk yang dipilih, buka modal quantity
+                    if (selectedProductIndex >= 0 && filteredProducts[selectedProductIndex]) {
+                      setSelectedProduct(filteredProducts[selectedProductIndex]);
+                      setShowQuantityModal(true);
+                    }
                     // Jika input berupa angka/kode, tambahkan ke cart
-                    if (/^[0-9]+$/.test(value)) {
+                    else if (/^[0-9]+$/.test(value)) {
                       handleBarcodeInput(value);
                     }
+                    // Jika hanya ada satu hasil pencarian, pilih produk tersebut
+                    else if (filteredProducts.length === 1) {
+                      setSelectedProduct(filteredProducts[0]);
+                      setShowQuantityModal(true);
+                    }
+                  }
+                  else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    setSelectedProductIndex(prev => 
+                      prev < filteredProducts.length - 1 ? prev + 1 : 0
+                    );
+                  }
+                  else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    setSelectedProductIndex(prev => 
+                      prev > 0 ? prev - 1 : filteredProducts.length - 1
+                    );
+                  }
+                  else if (e.key === 'Tab') {
+                    e.preventDefault();
+                    setSelectedProductIndex(prev => 
+                      prev < filteredProducts.length - 1 ? prev + 1 : 0
+                    );
                   }
                 }}
                 className="flex-1"
                 contentBefore={<Search24Regular />}
               />
-              <Button
-                appearance="primary"
-                icon={<Add24Regular />}
-                onClick={() => {
-                  const value = barcodeInput || searchQuery;
-                  if (/^[0-9]+$/.test(value)) {
-                    handleBarcodeInput(value);
-                  }
-                }}
-                disabled={!(barcodeInput || searchQuery)?.trim()}
-              >
-                Tambah
-              </Button>
             </div>
           </div>
 
           {/* Product Table */}
           <div className="flex-1 overflow-auto">
             {filteredProducts.length === 0 ? (
-              <div className="text-center py-12">
+              <div className="bg-white text-center py-12">
                 <ShoppingBag24Regular className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <Text className="text-gray-600">Tidak ada produk ditemukan</Text>
                 <Caption1 className="text-gray-500 mt-1">
@@ -547,8 +601,8 @@ function POSPageContent() {
               </div>
             ) : (
               <div className="bg-white">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                <table className="w-full bg-white">
+                  <thead className="bg-white border-b border-gray-200">
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Kode
@@ -563,19 +617,24 @@ function POSPageContent() {
                         Harga
                       </th>
                       <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Stok
-                      </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Aksi
+                        Total Stok
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredProducts.map((product) => (
+                    {filteredProducts.map((product, index) => (
                       <tr 
                         key={product.id} 
-                        className="hover:bg-gray-50 cursor-pointer transition-colors"
-                        onClick={() => addToCart(product)}
+                        className={cn(
+                          "cursor-pointer transition-colors",
+                          selectedProductIndex === index 
+                            ? "bg-blue-50 border-blue-200 ring-2 ring-blue-200" 
+                            : "hover:bg-gray-50"
+                        )}
+                        onClick={() => {
+                          setSelectedProduct(product);
+                          setShowQuantityModal(true);
+                        }}
                       >
                         <td className="px-4 py-3 whitespace-nowrap">
                           <Caption1 className="text-gray-900 font-mono">
@@ -604,30 +663,21 @@ function POSPageContent() {
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-right">
                           <Text weight="bold" className="text-blue-600">
-                            {formatCurrency(product.price)}
+                            Rp {product.price.toLocaleString('id-ID')}
                           </Text>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-center">
-                          <Badge 
-                            appearance="outline" 
-                            size="small"
-                            color={product.stock > 10 ? 'success' : product.stock > 0 ? 'warning' : 'danger'}
-                          >
-                            {product.stock}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-center">
-                          <Button
-                            appearance="primary"
-                            size="small"
-                            icon={<Add24Regular />}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              addToCart(product);
-                            }}
-                          >
-                            Tambah
-                          </Button>
+                          <div className="flex flex-col items-center">
+                            <Text weight="bold" className={cn(
+                              "text-lg",
+                              product.stock > 10 ? 'text-green-600' : product.stock > 0 ? 'text-orange-600' : 'text-red-600'
+                            )}>
+                              {product.stock}
+                            </Text>
+                            <Caption1 className="text-gray-500">
+                              {product.unit}
+                            </Caption1>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -943,6 +993,90 @@ function POSPageContent() {
           </DialogSurface>
         </Dialog>
       )}
+
+      {/* Quantity Input Modal */}
+      <Dialog open={showQuantityModal} onOpenChange={(_, data) => {
+        if (!data.open) {
+          handleQuantityCancel();
+        }
+      }}>
+        <DialogSurface className="max-w-sm">
+          <DialogBody className="p-4">
+            <DialogTitle className="text-center text-lg font-bold mb-3">Input Pembelian</DialogTitle>
+            <DialogContent className="space-y-4">
+              {selectedProduct && (
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 p-3 rounded-lg">
+                  <div className="text-center space-y-1">
+                    <Text size={400} weight="bold" className="block text-gray-900 leading-tight">
+                      {selectedProduct.name}
+                    </Text>
+                    <Text size={500} weight="bold" className="block text-blue-600">
+                      Rp {selectedProduct.price.toLocaleString('id-ID')}
+                    </Text>
+                    <Caption1 className="text-gray-600">
+                      Stok: {selectedProduct.stock} {selectedProduct.unit}
+                    </Caption1>
+                  </div>
+                </div>
+              )}
+              
+              <div className="space-y-2">
+                <Text weight="semibold" size={300} className="text-center block text-gray-700">Jumlah:</Text>
+                <Input
+                  type="text"
+                  value={quantityInput}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, '');
+                    setQuantityInput(value);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === 'F9') {
+                      e.preventDefault();
+                      handleQuantitySubmit();
+                    }
+                    if (e.key === 'Escape' || e.key === 'F10') {
+                      e.preventDefault();
+                      handleQuantityCancel();
+                    }
+                  }}
+                  placeholder="0"
+                  autoFocus
+                  className="text-center text-xl font-bold py-2 border-2 border-blue-300 focus:border-blue-500"
+                />
+              </div>
+              
+              {selectedProduct && quantityInput && (
+                <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                  <div className="flex justify-between items-center">
+                    <Text size={300} className="text-gray-700">Total:</Text>
+                    <Text size={400} weight="bold" className="text-green-600">
+                      Rp {(selectedProduct.price * parseInt(quantityInput || '0')).toLocaleString('id-ID')}
+                    </Text>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+            <DialogActions className="flex gap-2 mt-4">
+              <Button
+                appearance="secondary"
+                onClick={handleQuantityCancel}
+                className="flex-1 py-2"
+              >
+                Batal (Esc)
+              </Button>
+              <Button
+                appearance="primary"
+                onClick={handleQuantitySubmit}
+                disabled={!quantityInput || parseInt(quantityInput) <= 0}
+                icon={<Add24Regular />}
+                className="flex-1 py-2"
+              >
+                Simpan (Enter)
+              </Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
     </div>
   );
 }

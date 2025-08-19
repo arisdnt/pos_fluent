@@ -54,11 +54,13 @@ import {
   Info24Regular,
   Warning24Filled,
   CheckmarkCircle24Filled,
-  Dismiss24Regular
+  Dismiss24Regular,
+  QuestionCircle24Regular
 } from '@fluentui/react-icons';
 import { useAuth } from '@/lib/auth/use-auth';
 import { formatDateTime } from '@/lib/utils/format';
 import { cn } from '@/lib/utils/cn';
+import { useKeyboard } from '@/lib/keyboard/keyboard-provider';
 import toast from 'react-hot-toast';
 
 // ======================================================================
@@ -258,6 +260,7 @@ export default function MainLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { showHelp, registerAction, unregisterAction } = useKeyboard();
   
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
@@ -288,37 +291,35 @@ export default function MainLayout({
     };
   }, []);
 
-  // Keyboard shortcuts
+  // Register navigation actions
   useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      // F1 - Go to POS
-      if (e.key === 'F1') {
-        e.preventDefault();
-        router.push('/pos');
-      }
-      
-      // F5 - Refresh (prevent default browser refresh)
-      if (e.key === 'F5') {
-        e.preventDefault();
-        window.location.reload();
-      }
-      
-      // F11 - Toggle sidebar
-      if (e.key === 'F11') {
-        e.preventDefault();
-        setSidebarCollapsed(!sidebarCollapsed);
-      }
-      
-      // Ctrl+Shift+L - Logout
-      if (e.ctrlKey && e.shiftKey && e.key === 'L') {
-        e.preventDefault();
-        setShowLogoutDialog(true);
-      }
-    };
+    // Register navigation actions
+    registerAction('navigate-dashboard', () => router.push('/'));
+    registerAction('navigate-pos', () => router.push('/pos'));
+    registerAction('navigate-products', () => router.push('/products'));
+    registerAction('navigate-customers', () => router.push('/customers'));
+    registerAction('navigate-inventory', () => router.push('/inventory'));
+    registerAction('navigate-reports', () => router.push('/reports'));
+    registerAction('navigate-orders', () => router.push('/orders'));
+    registerAction('navigate-settings', () => router.push('/settings'));
+    registerAction('toggle-sidebar', () => setSidebarCollapsed(!sidebarCollapsed));
+    registerAction('logout', () => setShowLogoutDialog(true));
+    registerAction('refresh-page', () => window.location.reload());
 
-    document.addEventListener('keydown', handleKeyPress);
-    return () => document.removeEventListener('keydown', handleKeyPress);
-  }, [router, sidebarCollapsed]);
+    return () => {
+      unregisterAction('navigate-dashboard');
+      unregisterAction('navigate-pos');
+      unregisterAction('navigate-products');
+      unregisterAction('navigate-customers');
+      unregisterAction('navigate-inventory');
+      unregisterAction('navigate-reports');
+      unregisterAction('navigate-orders');
+      unregisterAction('navigate-settings');
+      unregisterAction('toggle-sidebar');
+      unregisterAction('logout');
+      unregisterAction('refresh-page');
+    };
+  }, [router, registerAction, unregisterAction, sidebarCollapsed]);
 
   const handleLogout = async () => {
     try {
@@ -503,6 +504,12 @@ export default function MainLayout({
                       onClick={() => router.push('/settings')}
                     >
                       Pengaturan
+                    </MenuItem>
+                    <MenuItem
+                      icon={<QuestionCircle24Regular />}
+                      onClick={showHelp}
+                    >
+                      Bantuan & Shortcuts (F1)
                     </MenuItem>
                     <MenuDivider />
                     <MenuItem

@@ -69,6 +69,7 @@ import { formatCurrency } from '@/lib/utils/format';
 import { formatDateTime } from '@/lib/utils/date';
 import { cn } from '@/lib/utils/cn';
 import { ExportButton, AdvancedExportButton } from '@/components/reports/ExportUtils';
+import { TwoColumnLayout } from '@/components/layout/TwoColumnLayout';
 
 // ======================================================================
 // TYPES
@@ -507,41 +508,7 @@ const inventoryColumns: TableColumnDefinition<InventoryItem>[] = [
       </TableCellLayout>
     )
   }),
-  createTableColumn<InventoryItem>({
-    columnId: 'actions',
-    renderHeaderCell: () => 'Aksi',
-    renderCell: (item) => (
-      <TableCellLayout>
-        <div className={styles.actionButtons}>
-          <Button
-            appearance="subtle"
-            size="small"
-            icon={<Eye24Regular />}
-            title="Lihat Detail"
-          />
-          <Button
-            appearance="subtle"
-            size="small"
-            icon={<Edit24Regular />}
-            title="Edit Stok"
-          />
-          <Button
-            appearance="subtle"
-            size="small"
-            icon={<History24Regular />}
-            title="Riwayat Stok"
-          />
-          <Button
-            appearance="subtle"
-            size="small"
-            icon={<ArrowSwap24Regular />}
-            title="Transfer Stok"
-            onClick={() => handleTransferStock(item)}
-          />
-        </div>
-      </TableCellLayout>
-    )
-  })
+
 ];
 
 const movementColumns: TableColumnDefinition<StockMovement>[] = [
@@ -876,6 +843,7 @@ function InventoryPageContent() {
   const [isExporting, setIsExporting] = useState(false);
   const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<InventoryItem | null>(null);
+  const [selectedInventoryItem, setSelectedInventoryItem] = useState<InventoryItem | null>(null);
   
   const { user, hasPermission } = useAuth();
   const router = useRouter();
@@ -913,6 +881,20 @@ function InventoryPageContent() {
   const handleTransferStock = (product: InventoryItem) => {
     setSelectedProduct(product);
     setIsTransferDialogOpen(true);
+  };
+
+  const handleInventoryItemSelect = (item: InventoryItem) => {
+    setSelectedInventoryItem(item);
+  };
+
+  const handleInventoryItemEdit = (item: InventoryItem) => {
+    console.log('Edit inventory item:', item);
+    // TODO: Implement edit functionality
+  };
+
+  const handleInventoryItemDelete = (item: InventoryItem) => {
+    console.log('Delete inventory item:', item);
+    // TODO: Implement delete functionality
   };
 
   const handleCreateTransfer = async (transferData: any) => {
@@ -977,6 +959,306 @@ function InventoryPageContent() {
   };
 
   // ======================================================================
+  // RENDER FUNCTIONS
+  // ======================================================================
+
+  const renderInventoryDetail = () => {
+    if (!selectedInventoryItem) {
+      return (
+        <div className="flex items-center justify-center h-full text-center">
+          <div>
+            <Box24Regular className="mx-auto mb-4 text-gray-400" style={{ fontSize: '48px' }} />
+            <Text size={400} className="text-gray-600">Pilih item inventori untuk melihat detail</Text>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="border-b pb-4">
+          <Title2>{selectedInventoryItem.product_name}</Title2>
+          <Text className="text-gray-600">SKU: {selectedInventoryItem.sku}</Text>
+        </div>
+
+        {/* Informasi Produk */}
+        <div className="space-y-4">
+          <div>
+            <Text weight="semibold" className="block mb-2">Informasi Produk</Text>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <Text className="text-gray-600">Kategori:</Text>
+                <Text>{selectedInventoryItem.category}</Text>
+              </div>
+              <div>
+                <Text className="text-gray-600">Unit:</Text>
+                <Text>{selectedInventoryItem.unit}</Text>
+              </div>
+              <div>
+                <Text className="text-gray-600">Supplier:</Text>
+                <Text>{selectedInventoryItem.supplier}</Text>
+              </div>
+              <div>
+                <Text className="text-gray-600">Lokasi:</Text>
+                <Text>{selectedInventoryItem.location}</Text>
+              </div>
+            </div>
+          </div>
+
+          {/* Informasi Stok */}
+          <div>
+            <Text weight="semibold" className="block mb-2">Informasi Stok</Text>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <Text className="text-gray-600">Stok Saat Ini:</Text>
+                <Text weight="semibold" className={cn(
+                  selectedInventoryItem.status === 'out_of_stock' && 'text-red-600',
+                  selectedInventoryItem.status === 'low_stock' && 'text-yellow-600',
+                  selectedInventoryItem.status === 'overstock' && 'text-blue-600'
+                )}>
+                  {selectedInventoryItem.current_stock} {selectedInventoryItem.unit}
+                </Text>
+              </div>
+              <div>
+                <Text className="text-gray-600">Status:</Text>
+                <Badge appearance={selectedInventoryItem.status === 'in_stock' ? 'filled' : 'outline'} 
+                       color={selectedInventoryItem.status === 'out_of_stock' ? 'danger' : 
+                              selectedInventoryItem.status === 'low_stock' ? 'warning' : 
+                              selectedInventoryItem.status === 'overstock' ? 'informative' : 'success'}>
+                  {selectedInventoryItem.status === 'in_stock' ? 'Tersedia' :
+                   selectedInventoryItem.status === 'low_stock' ? 'Stok Rendah' :
+                   selectedInventoryItem.status === 'out_of_stock' ? 'Habis' : 'Overstock'}
+                </Badge>
+              </div>
+              <div>
+                <Text className="text-gray-600">Minimum Stok:</Text>
+                <Text>{selectedInventoryItem.minimum_stock} {selectedInventoryItem.unit}</Text>
+              </div>
+              <div>
+                <Text className="text-gray-600">Maximum Stok:</Text>
+                <Text>{selectedInventoryItem.maximum_stock} {selectedInventoryItem.unit}</Text>
+              </div>
+            </div>
+          </div>
+
+          {/* Informasi Harga */}
+          <div>
+            <Text weight="semibold" className="block mb-2">Informasi Harga</Text>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <Text className="text-gray-600">Harga Pokok:</Text>
+                <Text weight="semibold">{formatCurrency(selectedInventoryItem.cost_price)}</Text>
+              </div>
+              <div>
+                <Text className="text-gray-600">Harga Jual:</Text>
+                <Text weight="semibold">{formatCurrency(selectedInventoryItem.selling_price)}</Text>
+              </div>
+            </div>
+          </div>
+
+          {/* Stok per Cabang */}
+          {selectedInventoryItem.branch_stocks && selectedInventoryItem.branch_stocks.length > 0 && (
+            <div>
+              <Text weight="semibold" className="block mb-2">Stok per Cabang</Text>
+              <div className="space-y-2">
+                {selectedInventoryItem.branch_stocks.map((branchStock) => (
+                  <div key={branchStock.branch_id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <div>
+                      <Text weight="semibold">{branchStock.branch_name}</Text>
+                      <Text size={200} className="text-gray-600">{branchStock.location}</Text>
+                    </div>
+                    <div className="text-right">
+                      <Text weight="semibold" className={cn(
+                        branchStock.status === 'out_of_stock' && 'text-red-600',
+                        branchStock.status === 'low_stock' && 'text-yellow-600',
+                        branchStock.status === 'overstock' && 'text-blue-600'
+                      )}>
+                        {branchStock.current_stock} {selectedInventoryItem.unit}
+                      </Text>
+                      <Text size={200} className="text-gray-600">
+                        Min: {branchStock.minimum_stock} | Max: {branchStock.maximum_stock}
+                      </Text>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Timestamp */}
+          <div>
+            <Text className="text-gray-600 text-sm">
+              Terakhir diperbarui: {formatDateTime(selectedInventoryItem.last_updated, 'dd/MM/yyyy HH:mm')}
+            </Text>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderLeftContent = () => {
+    return (
+      <div className="space-y-6">
+        {/* Statistik Inventori */}
+        <div className={styles.statsGrid}>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Box24Regular className="text-blue-600" />
+                </div>
+                <div>
+                  <Text size={200} className="text-gray-600">Total Produk</Text>
+                  <Title2>{stats.totalProducts.toLocaleString()}</Title2>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <CheckmarkCircle24Regular className="text-green-600" />
+                </div>
+                <div>
+                  <Text size={200} className="text-gray-600">Nilai Total</Text>
+                  <Title2>{formatCurrency(stats.totalValue)}</Title2>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-yellow-100 rounded-lg">
+                  <Warning24Regular className="text-yellow-600" />
+                </div>
+                <div>
+                  <Text size={200} className="text-gray-600">Stok Rendah</Text>
+                  <Title2 className="text-yellow-600">{stats.lowStockItems}</Title2>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <ErrorCircle24Regular className="text-red-600" />
+                </div>
+                <div>
+                  <Text size={200} className="text-gray-600">Stok Habis</Text>
+                  <Title2 className="text-red-600">{stats.outOfStockItems}</Title2>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <ArrowUpload24Regular className="text-blue-600" />
+                </div>
+                <div>
+                  <Text size={200} className="text-gray-600">Overstock</Text>
+                  <Title2 className="text-blue-600">{stats.overstockItems}</Title2>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+        </div>
+
+        {/* Filter */}
+        <Card className={styles.filtersCard}>
+          <div className={styles.filtersGrid}>
+            <Field label="Pencarian">
+              <Input
+                placeholder="Cari produk atau SKU..."
+                contentBefore={<Search24Regular />}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </Field>
+            <Field label="Kategori">
+              <Dropdown
+                placeholder="Semua Kategori"
+                value={categoryFilter}
+                onOptionSelect={(_, data) => setCategoryFilter(data.optionValue || 'all')}
+              >
+                <Option value="all">Semua Kategori</Option>
+                {categories.map(category => (
+                  <Option key={category} value={category}>{category}</Option>
+                ))}
+              </Dropdown>
+            </Field>
+            <Field label="Status Stok">
+              <Dropdown
+                placeholder="Semua Status"
+                value={statusFilter}
+                onOptionSelect={(_, data) => setStatusFilter(data.optionValue || 'all')}
+              >
+                <Option value="all">Semua Status</Option>
+                <Option value="in_stock">Tersedia</Option>
+                <Option value="low_stock">Stok Rendah</Option>
+                <Option value="out_of_stock">Stok Habis</Option>
+                <Option value="overstock">Overstock</Option>
+              </Dropdown>
+            </Field>
+            <Field label="Cabang">
+              <Dropdown
+                placeholder="Semua Cabang"
+                value={selectedBranch}
+                onOptionSelect={(_, data) => setSelectedBranch(data.optionValue || 'all')}
+              >
+                <Option value="all">Semua Cabang</Option>
+                {mockBranches.map(branch => (
+                  <Option key={branch.id} value={branch.id}>{branch.name}</Option>
+                ))}
+              </Dropdown>
+            </Field>
+          </div>
+        </Card>
+
+        {/* Tabel Inventori */}
+        <Card className={styles.tableCard}>
+          <DataGrid
+            items={filteredInventoryItems}
+            columns={inventoryColumns}
+            sortable
+            getRowId={(item) => item.id}
+          >
+            <DataGridHeader>
+              <DataGridRow>
+                {({ renderHeaderCell }) => (
+                  <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
+                )}
+              </DataGridRow>
+            </DataGridHeader>
+            <DataGridBody<InventoryItem>>
+              {({ item, rowId }) => (
+                <DataGridRow<InventoryItem>
+                  key={rowId}
+                  onClick={() => handleInventoryItemSelect(item)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {({ renderCell }) => (
+                    <DataGridCell>{renderCell(item)}</DataGridCell>
+                  )}
+                </DataGridRow>
+              )}
+            </DataGridBody>
+          </DataGrid>
+        </Card>
+      </div>
+    );
+  };
+
+  // ======================================================================
   // COMPUTED VALUES
   // ======================================================================
 
@@ -1031,315 +1313,88 @@ function InventoryPageContent() {
   }
 
   return (
-    <div className={styles.container}>
-      {/* Header */}
-      <div className={styles.header}>
-        <div>
-          <Title1>Manajemen Inventori</Title1>
-          <Body1 className="text-gray-600 mt-1">
-            Kelola stok dan pergerakan inventori produk
-          </Body1>
-        </div>
-        <div className="flex items-center gap-2">
-          <ExportButton
-            onExport={handleExport}
-            isLoading={isExporting}
-            data={activeTab === 'inventory' ? filteredInventoryItems : filteredStockMovements}
-            filename={`inventori_${activeTab}`}
-          />
-          <AdvancedExportButton
-            onExport={handleExport}
-            isLoading={isExporting}
-            reportType={activeTab === 'inventory' ? 'inventory' : 'stock_movements'}
-          />
-          {hasPermission('inventory.create') && (
-            <>
-              <Button
-                appearance="secondary"
-                icon={<ArrowSwap24Regular />}
-                onClick={() => setIsTransferDialogOpen(true)}
-              >
-                Transfer Stok
-              </Button>
-              <Button
-                appearance="primary"
-                icon={<Add24Regular />}
-                onClick={() => router.push('/inventory/adjustment')}
-              >
-                Penyesuaian Stok
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
+    <TwoColumnLayout
+      title="Manajemen Inventori"
+      subtitle="Kelola stok dan pergerakan inventori produk"
+      searchValue={searchQuery}
+      onSearchChange={setSearchQuery}
+      searchPlaceholder="Cari produk atau SKU..."
+      addButtonText="Penyesuaian Stok"
+      onAddClick={() => router.push('/inventory/adjustment')}
+      headerActions={[
+        <ExportButton
+          key="export"
+          onExport={handleExport}
+          isLoading={isExporting}
+          data={filteredInventoryItems}
+          filename="inventori"
+        />,
+        <AdvancedExportButton
+          key="advanced-export"
+          onExport={handleExport}
+          isLoading={isExporting}
+          reportType="inventory"
+        />,
+        hasPermission('inventory.create') && (
+          <Button
+            key="transfer"
+            appearance="secondary"
+            icon={<ArrowSwap24Regular />}
+            onClick={() => setIsTransferDialogOpen(true)}
+          >
+            Transfer Stok
+          </Button>
+        )
+      ].filter(Boolean)}
+      leftContent={renderLeftContent()}
+      rightContent={renderInventoryDetail()}
+      rightActions={selectedInventoryItem ? [
+        <Button
+          key="edit"
+          appearance="secondary"
+          icon={<Edit24Regular />}
+          onClick={() => handleInventoryItemEdit(selectedInventoryItem)}
+        >
+          Edit Stok
+        </Button>,
+        <Button
+          key="history"
+          appearance="secondary"
+          icon={<History24Regular />}
+          onClick={() => console.log('View history:', selectedInventoryItem.id)}
+        >
+          Riwayat
+        </Button>,
+        <Button
+          key="delete"
+          appearance="secondary"
+          icon={<Delete24Regular />}
+          onClick={() => handleInventoryItemDelete(selectedInventoryItem.id)}
+        >
+          Hapus
+        </Button>
+      ] : []}
+    />
 
-      {/* Stats Cards */}
-      <div className={styles.statsGrid}>
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Text size={200} className="text-gray-600">Total Produk</Text>
-              <Title2 className="text-blue-600 mt-1">
-                {stats?.totalProducts || 0}
-              </Title2>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Box24Regular className="text-blue-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Text size={200} className="text-gray-600">Nilai Inventori</Text>
-              <Title2 className="text-green-600 mt-1">
-                {formatCurrency(stats?.totalValue || 0)}
-              </Title2>
-            </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <CheckmarkCircle24Regular className="text-green-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Text size={200} className="text-gray-600">Stok Menipis</Text>
-              <Title2 className="text-yellow-600 mt-1">
-                {stats?.lowStockItems || 0}
-              </Title2>
-            </div>
-            <div className="p-3 bg-yellow-100 rounded-lg">
-              <Warning24Regular className="text-yellow-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Text size={200} className="text-gray-600">Stok Habis</Text>
-              <Title2 className="text-red-600 mt-1">
-                {stats?.outOfStockItems || 0}
-              </Title2>
-            </div>
-            <div className="p-3 bg-red-100 rounded-lg">
-              <ErrorCircle24Regular className="text-red-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Text size={200} className="text-gray-600">Stok Berlebih</Text>
-              <Title2 className="text-blue-600 mt-1">
-                {stats?.overstockItems || 0}
-              </Title2>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <ArrowUpload24Regular className="text-blue-600" />
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Alerts */}
-      {(stats?.lowStockItems || 0) > 0 && (
-        <MessageBar intent="warning">
-          <MessageBarBody>
-            <MessageBarTitle>Peringatan Stok</MessageBarTitle>
-            Ada {stats?.lowStockItems} produk dengan stok menipis yang perlu diperhatikan.
-          </MessageBarBody>
-        </MessageBar>
-      )}
-
-      {(stats?.outOfStockItems || 0) > 0 && (
-        <MessageBar intent="error">
-          <MessageBarBody>
-            <MessageBarTitle>Stok Habis</MessageBarTitle>
-            Ada {stats?.outOfStockItems} produk yang stoknya habis dan perlu segera diisi ulang.
-          </MessageBarBody>
-        </MessageBar>
-      )}
-
-      {/* Filters */}
-      <Card className={styles.filtersCard}>
-        <div className={styles.filtersGrid}>
-          <Field label="Pencarian">
-            <Input
-              placeholder="Cari produk atau SKU..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              contentBefore={<Search24Regular />}
+      {/* Transfer Stock Dialog */}
+      <Dialog open={isTransferDialogOpen} onOpenChange={(e, data) => setIsTransferDialogOpen(data.open)}>
+        <DialogSurface className={styles.transferDialog}>
+          <DialogTitle>Transfer Stok Antar Cabang</DialogTitle>
+          <DialogContent>
+            <TransferStockForm
+              product={selectedProduct}
+              branches={mockBranches}
+              onSubmit={handleCreateTransfer}
+              onCancel={() => {
+                setIsTransferDialogOpen(false);
+                setSelectedProduct(null);
+              }}
             />
-          </Field>
-          
-          <Field label="Kategori">
-            <Dropdown
-              placeholder="Semua Kategori"
-              value={categoryFilter}
-              onOptionSelect={(e, data) => setCategoryFilter(data.optionValue || 'all')}
-            >
-              <Option value="all">Semua Kategori</Option>
-              {categories.map(category => (
-                <Option key={category} value={category}>{category}</Option>
-              ))}
-            </Dropdown>
-          </Field>
-          
-          <Field label="Status Stok">
-            <Dropdown
-              placeholder="Semua Status"
-              value={statusFilter}
-              onOptionSelect={(e, data) => setStatusFilter(data.optionValue || 'all')}
-            >
-              <Option value="all">Semua Status</Option>
-              <Option value="in_stock">Stok Normal</Option>
-              <Option value="low_stock">Stok Menipis</Option>
-              <Option value="out_of_stock">Stok Habis</Option>
-              <Option value="overstock">Stok Berlebih</Option>
-            </Dropdown>
-          </Field>
-          
-          <Field label="Cabang">
-            <Dropdown
-              placeholder="Semua Cabang"
-              value={selectedBranch}
-              onOptionSelect={(e, data) => setSelectedBranch(data.optionValue || 'all')}
-            >
-              <Option value="all">Semua Cabang</Option>
-              {mockBranches.map(branch => (
-                <Option key={branch.id} value={branch.id}>{branch.name}</Option>
-              ))}
-            </Dropdown>
-          </Field>
-          
-          <Field label="Tampilan">
-            <Dropdown
-              placeholder="Pilih Tampilan"
-              value={activeTab}
-              onOptionSelect={(e, data) => setActiveTab(data.optionValue as 'inventory' | 'movements' | 'transfers')}
-            >
-              <Option value="inventory">Data Inventori</Option>
-              <Option value="movements">Riwayat Pergerakan</Option>
-              <Option value="transfers">Transfer Stok</Option>
-            </Dropdown>
-          </Field>
-        </div>
-      </Card>
-
-      {/* Data Table */}
-      <Card className={styles.tableCard}>
-        <CardHeader>
-          <Title2>
-            {activeTab === 'inventory' && 'Data Inventori'}
-            {activeTab === 'movements' && 'Riwayat Pergerakan Stok'}
-            {activeTab === 'transfers' && 'Transfer Stok Antar Cabang'}
-          </Title2>
-        </CardHeader>
-        <div className="p-6 pt-0">
-          {activeTab === 'inventory' && (
-            <DataGrid
-              items={filteredInventoryItems}
-              columns={inventoryColumns}
-              sortable
-              getRowId={(item) => item.id}
-            >
-              <DataGridHeader>
-                <DataGridRow>
-                  {({ renderHeaderCell }) => (
-                    <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-                  )}
-                </DataGridRow>
-              </DataGridHeader>
-              <DataGridBody<InventoryItem>>
-                {({ item, rowId }) => (
-                  <DataGridRow<InventoryItem> key={rowId}>
-                    {({ renderCell }) => (
-                      <DataGridCell>{renderCell(item)}</DataGridCell>
-                    )}
-                  </DataGridRow>
-                )}
-              </DataGridBody>
-            </DataGrid>
-          )}
-          
-          {activeTab === 'movements' && (
-            <DataGrid
-              items={filteredStockMovements}
-              columns={movementColumns}
-              sortable
-              getRowId={(item) => item.id}
-            >
-              <DataGridHeader>
-                <DataGridRow>
-                  {({ renderHeaderCell }) => (
-                    <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-                  )}
-                </DataGridRow>
-              </DataGridHeader>
-              <DataGridBody<StockMovement>>
-                {({ item, rowId }) => (
-                  <DataGridRow<StockMovement> key={rowId}>
-                    {({ renderCell }) => (
-                      <DataGridCell>{renderCell(item)}</DataGridCell>
-                    )}
-                  </DataGridRow>
-                )}
-              </DataGridBody>
-            </DataGrid>
-          )}
-          
-          {activeTab === 'transfers' && (
-            <DataGrid
-              items={filteredStockTransfers}
-              columns={transferColumns}
-              sortable
-              getRowId={(item) => item.id}
-            >
-              <DataGridHeader>
-                <DataGridRow>
-                  {({ renderHeaderCell }) => (
-                    <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-                  )}
-                </DataGridRow>
-              </DataGridHeader>
-              <DataGridBody<StockTransfer>>
-                {({ item, rowId }) => (
-                  <DataGridRow<StockTransfer> key={rowId}>
-                    {({ renderCell }) => (
-                      <DataGridCell>{renderCell(item)}</DataGridCell>
-                    )}
-                  </DataGridRow>
-                )}
-              </DataGridBody>
-            </DataGrid>
-          )}
-        </div>
-      </Card>
-
-        {/* Transfer Stock Dialog */}
-        <Dialog open={isTransferDialogOpen} onOpenChange={(e, data) => setIsTransferDialogOpen(data.open)}>
-          <DialogSurface className={styles.transferDialog}>
-            <DialogTitle>Transfer Stok Antar Cabang</DialogTitle>
-            <DialogContent>
-              <TransferStockForm
-                product={selectedProduct}
-                branches={mockBranches}
-                onSubmit={handleCreateTransfer}
-                onCancel={() => {
-                  setIsTransferDialogOpen(false);
-                  setSelectedProduct(null);
-                }}
-              />
-            </DialogContent>
-          </DialogSurface>
-        </Dialog>
-      </div>
-    );
+          </DialogContent>
+        </DialogSurface>
+      </Dialog>
+    </div>
+  );
   }
 
 // ======================================================================

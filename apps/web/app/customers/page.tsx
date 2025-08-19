@@ -71,6 +71,7 @@ import { formatCurrency } from '@/lib/utils/format';
 import { formatDateTime } from '@/lib/utils/date';
 import { cn } from '@/lib/utils/cn';
 import { ExportButton, AdvancedExportButton } from '@/components/reports/ExportUtils';
+import { TwoColumnLayout } from '@/components/layout/TwoColumnLayout';
 
 // ======================================================================
 // TYPES
@@ -419,34 +420,7 @@ const customerColumns: TableColumnDefinition<Customer>[] = [
       );
     }
   }),
-  createTableColumn<Customer>({
-    columnId: 'actions',
-    renderHeaderCell: () => 'Aksi',
-    renderCell: (item) => (
-      <TableCellLayout>
-        <div className={styles.actionButtons}>
-          <Button
-            appearance="subtle"
-            size="small"
-            icon={<Eye24Regular />}
-            title="Lihat Detail"
-          />
-          <Button
-            appearance="subtle"
-            size="small"
-            icon={<Edit24Regular />}
-            title="Edit Data"
-          />
-          <Button
-            appearance="subtle"
-            size="small"
-            icon={<Cart24Regular />}
-            title="Riwayat Transaksi"
-          />
-        </div>
-      </TableCellLayout>
-    )
-  })
+
 ];
 
 // ======================================================================
@@ -461,6 +435,7 @@ function CustomersPageContent() {
   const [memberFilter, setMemberFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isExporting, setIsExporting] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   
   const { user, hasPermission } = useAuth();
   const router = useRouter();
@@ -524,6 +499,405 @@ function CustomersPageContent() {
     }
   };
 
+  const handleCustomerSelect = (customer: Customer) => {
+    setSelectedCustomer(customer);
+  };
+
+  const handleCustomerEdit = () => {
+    if (selectedCustomer) {
+      console.log('Edit customer:', selectedCustomer.id);
+      // TODO: Implement edit functionality
+    }
+  };
+
+  const handleCustomerDelete = () => {
+    if (selectedCustomer) {
+      console.log('Delete customer:', selectedCustomer.id);
+      // TODO: Implement delete functionality
+    }
+  };
+
+  // Render customer detail panel
+  const renderCustomerDetail = () => {
+    if (!selectedCustomer) {
+      return (
+        <div className="flex items-center justify-center h-64 text-gray-500">
+          <div className="text-center">
+            <Person24Regular className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+            <Text>Pilih pelanggan untuk melihat detail</Text>
+          </div>
+        </div>
+      );
+    }
+
+    const memberTypeConfig = {
+      regular: { label: 'Regular', color: 'bg-gray-100 text-gray-800' },
+      silver: { label: 'Silver', color: 'bg-gray-200 text-gray-800' },
+      gold: { label: 'Gold', color: 'bg-yellow-100 text-yellow-800' },
+      platinum: { label: 'Platinum', color: 'bg-purple-100 text-purple-800' }
+    };
+
+    const statusConfig = {
+      active: { label: 'Aktif', color: 'bg-green-100 text-green-800' },
+      inactive: { label: 'Tidak Aktif', color: 'bg-gray-100 text-gray-800' },
+      blocked: { label: 'Diblokir', color: 'bg-red-100 text-red-800' }
+    };
+
+    return (
+      <div className="space-y-6">
+        {/* Customer Header */}
+        <div className="flex items-center gap-4">
+          <Avatar
+            name={selectedCustomer.full_name}
+            size={64}
+            color={selectedCustomer.member_type === 'platinum' ? 'purple' : 
+                   selectedCustomer.member_type === 'gold' ? 'gold' :
+                   selectedCustomer.member_type === 'silver' ? 'steel' : 'brand'}
+          />
+          <div>
+            <Title2>{selectedCustomer.full_name}</Title2>
+            <Text className="text-gray-600">{selectedCustomer.customer_code}</Text>
+            <div className="flex items-center gap-2 mt-2">
+              <Badge className={memberTypeConfig[selectedCustomer.member_type].color}>
+                {memberTypeConfig[selectedCustomer.member_type].label}
+              </Badge>
+              <Badge className={statusConfig[selectedCustomer.status].color}>
+                {statusConfig[selectedCustomer.status].label}
+              </Badge>
+            </div>
+          </div>
+        </div>
+
+        {/* Contact Information */}
+        <Card className="p-4">
+          <Title2 className="mb-4">Informasi Kontak</Title2>
+          <div className="space-y-3">
+            {selectedCustomer.phone && (
+              <div className="flex items-center gap-3">
+                <Phone24Regular className="text-gray-500" />
+                <Text>{selectedCustomer.phone}</Text>
+              </div>
+            )}
+            {selectedCustomer.email && (
+              <div className="flex items-center gap-3">
+                <Mail24Regular className="text-gray-500" />
+                <Text>{selectedCustomer.email}</Text>
+              </div>
+            )}
+            {selectedCustomer.address && (
+              <div className="flex items-center gap-3">
+                <Location24Regular className="text-gray-500" />
+                <div>
+                  <Text>{selectedCustomer.address}</Text>
+                  {selectedCustomer.city && (
+                    <Text size={200} className="text-gray-600 block">
+                      {selectedCustomer.city} {selectedCustomer.postal_code}
+                    </Text>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* Member Information */}
+        <Card className="p-4">
+          <Title2 className="mb-4">Informasi Member</Title2>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Text size={200} className="text-gray-600">Member Sejak</Text>
+              <Text weight="semibold">
+                {formatDateTime(selectedCustomer.member_since, 'dd/MM/yyyy')}
+              </Text>
+            </div>
+            <div>
+              <Text size={200} className="text-gray-600">Poin</Text>
+              <Text weight="semibold" className="text-orange-600">
+                {selectedCustomer.points.toLocaleString()}
+              </Text>
+            </div>
+            {selectedCustomer.birth_date && (
+              <div>
+                <Text size={200} className="text-gray-600">Tanggal Lahir</Text>
+                <Text weight="semibold">
+                  {formatDateTime(selectedCustomer.birth_date, 'dd/MM/yyyy')}
+                </Text>
+              </div>
+            )}
+            {selectedCustomer.gender && (
+              <div>
+                <Text size={200} className="text-gray-600">Jenis Kelamin</Text>
+                <Text weight="semibold">
+                  {selectedCustomer.gender === 'male' ? 'Laki-laki' : 'Perempuan'}
+                </Text>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* Transaction Summary */}
+        <Card className="p-4">
+          <Title2 className="mb-4">Ringkasan Transaksi</Title2>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Text size={200} className="text-gray-600">Total Transaksi</Text>
+              <Text weight="semibold">{selectedCustomer.total_transactions}</Text>
+            </div>
+            <div>
+              <Text size={200} className="text-gray-600">Total Pembelian</Text>
+              <Text weight="semibold">{formatCurrency(selectedCustomer.total_spent)}</Text>
+            </div>
+            <div className="col-span-2">
+              <Text size={200} className="text-gray-600">Transaksi Terakhir</Text>
+              <Text weight="semibold">
+                {selectedCustomer.last_transaction 
+                  ? formatDateTime(selectedCustomer.last_transaction, 'dd/MM/yyyy HH:mm')
+                  : 'Belum ada transaksi'
+                }
+              </Text>
+            </div>
+          </div>
+        </Card>
+
+        {/* Notes */}
+        {selectedCustomer.notes && (
+          <Card className="p-4">
+            <Title2 className="mb-4">Catatan</Title2>
+            <Text>{selectedCustomer.notes}</Text>
+          </Card>
+        )}
+
+        {/* Timestamps */}
+        <Card className="p-4">
+          <Title2 className="mb-4">Informasi Sistem</Title2>
+          <div className="space-y-2">
+            <div>
+              <Text size={200} className="text-gray-600">Dibuat</Text>
+              <Text>{formatDateTime(selectedCustomer.created_at, 'dd/MM/yyyy HH:mm')}</Text>
+            </div>
+            <div>
+              <Text size={200} className="text-gray-600">Diperbarui</Text>
+              <Text>{formatDateTime(selectedCustomer.updated_at, 'dd/MM/yyyy HH:mm')}</Text>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  };
+
+  // Render left content (stats, filters, table)
+  const renderLeftContent = () => {
+    return (
+      <div className="space-y-6">
+        {/* Stats Cards */}
+        <div className={styles.statsGrid}>
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Text size={200} className="text-gray-600">Total Pelanggan</Text>
+                <Title2 className="text-blue-600 mt-1">
+                  {stats?.totalCustomers || 0}
+                </Title2>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <People24Regular className="text-blue-600" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Text size={200} className="text-gray-600">Pelanggan Aktif</Text>
+                <Title2 className="text-green-600 mt-1">
+                  {stats?.activeCustomers || 0}
+                </Title2>
+              </div>
+              <div className="p-3 bg-green-100 rounded-lg">
+                <Person24Regular className="text-green-600" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Text size={200} className="text-gray-600">Member Baru Bulan Ini</Text>
+                <Title2 className="text-purple-600 mt-1">
+                  {stats?.newCustomersThisMonth || 0}
+                </Title2>
+              </div>
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <Add24Regular className="text-purple-600" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Text size={200} className="text-gray-600">Total Revenue</Text>
+                <Title2 className="text-orange-600 mt-1">
+                  {formatCurrency(stats?.totalRevenue || 0)}
+                </Title2>
+              </div>
+              <div className="p-3 bg-orange-100 rounded-lg">
+                <Money24Regular className="text-orange-600" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Text size={200} className="text-gray-600">Rata-rata per Pelanggan</Text>
+                <Title2 className="text-teal-600 mt-1">
+                  {formatCurrency(stats?.averageSpentPerCustomer || 0)}
+                </Title2>
+              </div>
+              <div className="p-3 bg-teal-100 rounded-lg">
+                <Cart24Regular className="text-teal-600" />
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Member Distribution */}
+        <Card className="p-6">
+          <Title2 className="mb-4">Distribusi Member</Title2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {Object.entries(stats?.memberDistribution || {}).map(([type, count]) => {
+              const total = stats?.totalCustomers || 1;
+              const percentage = (count / total) * 100;
+              
+              const typeConfig = {
+                regular: { label: 'Regular', color: 'bg-gray-500' },
+                silver: { label: 'Silver', color: 'bg-gray-400' },
+                gold: { label: 'Gold', color: 'bg-yellow-500' },
+                platinum: { label: 'Platinum', color: 'bg-purple-500' }
+              };
+              
+              const config = typeConfig[type as keyof typeof typeConfig];
+              
+              return (
+                <div key={type} className="text-center">
+                  <div className="flex items-center justify-between mb-2">
+                    <Text weight="semibold">{config.label}</Text>
+                    <Text size={200} className="text-gray-600">{count}</Text>
+                  </div>
+                  <ProgressBar 
+                    value={percentage} 
+                    max={100}
+                    className="mb-1"
+                  />
+                  <Text size={200} className="text-gray-600">
+                    {percentage.toFixed(1)}%
+                  </Text>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+
+        {/* Filters */}
+        <Card className={styles.filtersCard}>
+          <div className={styles.filtersGrid}>
+            <Field label="Pencarian">
+              <Input
+                placeholder="Cari nama, kode, telepon, atau email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                contentBefore={<Search24Regular />}
+              />
+            </Field>
+            
+            <Field label="Tipe Member">
+              <Dropdown
+                placeholder="Semua Member"
+                value={memberFilter}
+                onOptionSelect={(e, data) => setMemberFilter(data.optionValue || 'all')}
+              >
+                <Option value="all">Semua Member</Option>
+                <Option value="regular">Regular</Option>
+                <Option value="silver">Silver</Option>
+                <Option value="gold">Gold</Option>
+                <Option value="platinum">Platinum</Option>
+              </Dropdown>
+            </Field>
+            
+            <Field label="Status">
+              <Dropdown
+                placeholder="Semua Status"
+                value={statusFilter}
+                onOptionSelect={(e, data) => setStatusFilter(data.optionValue || 'all')}
+              >
+                <Option value="all">Semua Status</Option>
+                <Option value="active">Aktif</Option>
+                <Option value="inactive">Tidak Aktif</Option>
+                <Option value="blocked">Diblokir</Option>
+              </Dropdown>
+            </Field>
+            
+            <Field label="Aksi Cepat">
+              <Button
+                appearance="outline"
+                icon={<Filter24Regular />}
+                onClick={() => {
+                  setSearchQuery('');
+                  setMemberFilter('all');
+                  setStatusFilter('all');
+                }}
+              >
+                Reset Filter
+              </Button>
+            </Field>
+          </div>
+        </Card>
+
+        {/* Data Table */}
+        <Card className={styles.tableCard}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <Title2>Data Pelanggan</Title2>
+              <Text size={200} className="text-gray-600">
+                Menampilkan {filteredCustomers.length} dari {customers.length} pelanggan
+              </Text>
+            </div>
+          </CardHeader>
+          <div className="p-6 pt-0">
+            <DataGrid
+              items={filteredCustomers}
+              columns={customerColumns}
+              sortable
+              getRowId={(item) => item.id}
+            >
+              <DataGridHeader>
+                <DataGridRow>
+                  {({ renderHeaderCell }) => (
+                    <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
+                  )}
+                </DataGridRow>
+              </DataGridHeader>
+              <DataGridBody<Customer>>
+                {({ item, rowId }) => (
+                  <DataGridRow<Customer> 
+                    key={rowId}
+                    onClick={() => handleCustomerSelect(item)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {({ renderCell }) => (
+                      <DataGridCell>{renderCell(item)}</DataGridCell>
+                    )}
+                  </DataGridRow>
+                )}
+              </DataGridBody>
+            </DataGrid>
+          </div>
+        </Card>
+      </div>
+    );
+  };
+
   // ======================================================================
   // COMPUTED VALUES
   // ======================================================================
@@ -557,15 +931,19 @@ function CustomersPageContent() {
   }
 
   return (
-    <div className={styles.container}>
-      {/* Header */}
-      <div className={styles.header}>
-        <div>
-          <Title1>Manajemen Pelanggan</Title1>
-          <Body1 className="text-gray-600 mt-1">
-            Kelola data pelanggan dan program member
-          </Body1>
-        </div>
+    <TwoColumnLayout
+      title="Manajemen Pelanggan"
+      subtitle="Kelola data pelanggan dan program member"
+      searchValue={searchQuery}
+      onSearchChange={setSearchQuery}
+      searchPlaceholder="Cari nama, kode, telepon, atau email..."
+      addButton={
+        hasPermission('customers.create') ? {
+          label: 'Tambah Pelanggan',
+          onClick: () => router.push('/customers/new')
+        } : undefined
+      }
+      headerActions={
         <div className="flex items-center gap-2">
           <ExportButton
             onExport={handleExport}
@@ -578,220 +956,36 @@ function CustomersPageContent() {
             isLoading={isExporting}
             reportType="customers"
           />
-          {hasPermission('customers.create') && (
-            <Button
-              appearance="primary"
-              icon={<Add24Regular />}
-              onClick={() => router.push('/customers/new')}
-            >
-              Tambah Pelanggan
-            </Button>
-          )}
         </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className={styles.statsGrid}>
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Text size={200} className="text-gray-600">Total Pelanggan</Text>
-              <Title2 className="text-blue-600 mt-1">
-                {stats?.totalCustomers || 0}
-              </Title2>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <People24Regular className="text-blue-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Text size={200} className="text-gray-600">Pelanggan Aktif</Text>
-              <Title2 className="text-green-600 mt-1">
-                {stats?.activeCustomers || 0}
-              </Title2>
-            </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <Person24Regular className="text-green-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Text size={200} className="text-gray-600">Member Baru Bulan Ini</Text>
-              <Title2 className="text-purple-600 mt-1">
-                {stats?.newCustomersThisMonth || 0}
-              </Title2>
-            </div>
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <Add24Regular className="text-purple-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Text size={200} className="text-gray-600">Total Revenue</Text>
-              <Title2 className="text-orange-600 mt-1">
-                {formatCurrency(stats?.totalRevenue || 0)}
-              </Title2>
-            </div>
-            <div className="p-3 bg-orange-100 rounded-lg">
-              <Money24Regular className="text-orange-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Text size={200} className="text-gray-600">Rata-rata per Pelanggan</Text>
-              <Title2 className="text-teal-600 mt-1">
-                {formatCurrency(stats?.averageSpentPerCustomer || 0)}
-              </Title2>
-            </div>
-            <div className="p-3 bg-teal-100 rounded-lg">
-              <Cart24Regular className="text-teal-600" />
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Member Distribution */}
-      <Card className="p-6">
-        <Title2 className="mb-4">Distribusi Member</Title2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {Object.entries(stats?.memberDistribution || {}).map(([type, count]) => {
-            const total = stats?.totalCustomers || 1;
-            const percentage = (count / total) * 100;
-            
-            const typeConfig = {
-              regular: { label: 'Regular', color: 'bg-gray-500' },
-              silver: { label: 'Silver', color: 'bg-gray-400' },
-              gold: { label: 'Gold', color: 'bg-yellow-500' },
-              platinum: { label: 'Platinum', color: 'bg-purple-500' }
-            };
-            
-            const config = typeConfig[type as keyof typeof typeConfig];
-            
-            return (
-              <div key={type} className="text-center">
-                <div className="flex items-center justify-between mb-2">
-                  <Text weight="semibold">{config.label}</Text>
-                  <Text size={200} className="text-gray-600">{count}</Text>
-                </div>
-                <ProgressBar 
-                  value={percentage} 
-                  max={100}
-                  className="mb-1"
-                />
-                <Text size={200} className="text-gray-600">
-                  {percentage.toFixed(1)}%
-                </Text>
-              </div>
-            );
-          })}
-        </div>
-      </Card>
-
-      {/* Filters */}
-      <Card className={styles.filtersCard}>
-        <div className={styles.filtersGrid}>
-          <Field label="Pencarian">
-            <Input
-              placeholder="Cari nama, kode, telepon, atau email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              contentBefore={<Search24Regular />}
-            />
-          </Field>
-          
-          <Field label="Tipe Member">
-            <Dropdown
-              placeholder="Semua Member"
-              value={memberFilter}
-              onOptionSelect={(e, data) => setMemberFilter(data.optionValue || 'all')}
-            >
-              <Option value="all">Semua Member</Option>
-              <Option value="regular">Regular</Option>
-              <Option value="silver">Silver</Option>
-              <Option value="gold">Gold</Option>
-              <Option value="platinum">Platinum</Option>
-            </Dropdown>
-          </Field>
-          
-          <Field label="Status">
-            <Dropdown
-              placeholder="Semua Status"
-              value={statusFilter}
-              onOptionSelect={(e, data) => setStatusFilter(data.optionValue || 'all')}
-            >
-              <Option value="all">Semua Status</Option>
-              <Option value="active">Aktif</Option>
-              <Option value="inactive">Tidak Aktif</Option>
-              <Option value="blocked">Diblokir</Option>
-            </Dropdown>
-          </Field>
-          
-          <Field label="Aksi Cepat">
+      }
+      leftContent={renderLeftContent()}
+      rightContent={renderCustomerDetail()}
+      rightTitle="Detail Pelanggan"
+      rightActions={
+        selectedCustomer && hasPermission('customers.update') ? (
+          <div className="flex items-center gap-2">
             <Button
+              size="small"
               appearance="outline"
-              icon={<Filter24Regular />}
-              onClick={() => {
-                setSearchQuery('');
-                setMemberFilter('all');
-                setStatusFilter('all');
-              }}
+              icon={<Edit24Regular />}
+              onClick={() => handleCustomerEdit(selectedCustomer)}
             >
-              Reset Filter
+              Edit
             </Button>
-          </Field>
-        </div>
-      </Card>
-
-      {/* Data Table */}
-      <Card className={styles.tableCard}>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <Title2>Data Pelanggan</Title2>
-            <Text size={200} className="text-gray-600">
-              Menampilkan {filteredCustomers.length} dari {customers.length} pelanggan
-            </Text>
+            {hasPermission('customers.delete') && (
+              <Button
+                size="small"
+                appearance="outline"
+                icon={<Delete24Regular />}
+                onClick={() => handleCustomerDelete(selectedCustomer)}
+              >
+                Hapus
+              </Button>
+            )}
           </div>
-        </CardHeader>
-        <div className="p-6 pt-0">
-          <DataGrid
-            items={filteredCustomers}
-            columns={customerColumns}
-            sortable
-            getRowId={(item) => item.id}
-          >
-            <DataGridHeader>
-              <DataGridRow>
-                {({ renderHeaderCell }) => (
-                  <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-                )}
-              </DataGridRow>
-            </DataGridHeader>
-            <DataGridBody<Customer>>
-              {({ item, rowId }) => (
-                <DataGridRow<Customer> key={rowId}>
-                  {({ renderCell }) => (
-                    <DataGridCell>{renderCell(item)}</DataGridCell>
-                  )}
-                </DataGridRow>
-              )}
-            </DataGridBody>
-          </DataGrid>
-        </div>
-      </Card>
-    </div>
+        ) : undefined
+      }
+    />
   );
 }
 
