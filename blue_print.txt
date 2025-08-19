@@ -1,0 +1,317 @@
+
+CATATAN TEKNIS LENGKAP & KOMPREHENSIF
+Aplikasi Kasir Desktop (Next.js + Tauri) – Target Indonesia (id-ID, Asia/Jakarta)
+Terakhir diperbarui: 18 Aug 2025 19:08 WIB
+
+======================================================================
+0) RINGKASAN EKSEKUTIF
+======================================================================
+• Tujuan: Membangun aplikasi kasir "rasa desktop tradisional" dengan UI ala Windows (Fluent UI React v9), berjalan sebagai aplikasi desktop via Tauri (WebView2), backend Next.js (SSR/Server Actions), database PostgreSQL (VPS/lokal), dan mendukung data besar dengan TanStack Table (server-driven).
+• Bahasa & Wilayah: Seluruh UI dan laporan dalam Bahasa Indonesia; format angka/mata uang mengikuti konvensi Indonesia; timezone Asia/Jakarta (WIB).
+• Kebijakan Uang: Simpan integer Rupiah; tampilan kasir TANPA desimal; pembulatan opsional (Rp50/Rp100).
+• Pajak (PPN): Opsi aktif/nonaktif; tarif dinamis (default 11%); mode tax-inclusive (disarankan retail) atau exclusive.
+• Ekspor: Excel (XLSX) & PDF berbasis VIEW Indonesia.
+• Distribusi: Paket desktop (MSI) dengan auto-update via Tauri Updater.
+• Keamanan: VPN/Tunnel untuk PostgreSQL, origin lock WebView2, RBAC & (opsional) RLS per cabang.
+• Performa: Server-side pagination, keyset cursor, indeks spesifik, MV untuk laporan berat.
+
+======================================================================
+1) SKEMA DATABASE (TINGKAT KONSEP)
+======================================================================
+Catatan: Nama fisik tabel/kolom tetap bahasa Inggris (stabil untuk ORM/SDK), namun disediakan VIEW Bahasa Indonesia + COMMENT berbahasa Indonesia.
+
+1.1 Tabel Inti (contoh umum—sesuaikan dengan skema Anda)
+- branches(id, code, name, ...)
+- users(id, full_name, role_id, ...)
+- roles(id, name, ...), permissions(...), user_roles(user_id, role_id, branch_id)
+- products(id, sku, barcode, name, category_id, brand_id, is_active, ...)
+- product_prices(product_id, price_level, branch_id?, effective_from?, effective_to?, price, currency)
+- pos_sessions(id, branch_id, cashier_id, opening_cash, opened_at, closing_cash, closed_at, cash_difference, ...)
+- pos_orders(id, order_no, branch_id, session_id, cashier_id, status, subtotal, discount_amount, tax_amount, total, paid_total, change_amount, created_at, ...)
+- pos_order_lines(id, order_id, product_id, quantity, price, discount_amount, tax_amount, ...)
+- pos_payments(id, order_id, payment_method, amount, reference, captured_at, ...)
+- stocks(product_id, branch_id, quantity_on_hand, updated_at)
+- stock_movements(id, product_id, branch_id, movement_type(in/out/adjust/transfer), reference_type, reference_id, quantity, cost, created_by, created_at)
+- tax_groups(id, name, rate_percent, ...)
+- promotions(id, name, criteria_json, ...)
+- customers(id, name, phone, ...), suppliers(id, name, ...)
+
+1.2 Indeks Disarankan
+- products: (name) pg_trgm, (sku), (barcode)
+- pos_orders: (created_at, branch_id), (status), (cashier_id)
+- pos_order_lines: (order_id), (product_id)
+- stock_movements: (product_id, created_at, branch_id)
+- customers: (phone), (name) pg_trgm
+
+1.3 Timezone & Tipe Data
+- Simpan waktu sebagai timestamptz (UTC).
+- Konversi ke WIB pada saat select untuk laporan/VIEW.
+- Nilai uang disimpan INTEGER Rupiah (bukan float).
+
+1.4 Kebijakan PPN
+- Tabel pengaturan (config) menyimpan: ppn_aktif (bool), ppn_tarif (int, default 11), ppn_mode ('inclusive'|'exclusive'), pembulatan ('none'|'50'|'100').
+- Per item mapping ke tax_group jika diperlukan.
+
+======================================================================
+2) VIEW BERBAHASA INDONESIA & COMMENT
+======================================================================
+Konvensi nama VIEW: prefix "vw_", snake_case, berbahasa Indonesia.
+Semua VIEW menampilkan WIB dan Rupiah tanpa desimal.
+
+2.1 Daftar VIEW
+- vw_transaksi: ringkasan per struk/transaksi
+- vw_transaksi_item: baris item per transaksi
+- vw_produk: katalog + harga aktif + stok ringkas
+- vw_mutasi_stok: pergerakan stok
+- vw_shift_kasir: ringkasan sesi kasir (buka/tutup)
+(opsional fase 2) vw_pembelian, vw_penerimaan_barang, vw_hutang
+
+2.2 Skema Kolom (contoh ringkas)
+a) vw_transaksi:
+  id_transaksi (uuid)            ← pos_orders.id
+  nomor_struk (text)             ← pos_orders.order_no
+  tanggal_wib (timestamp)        ← pos_orders.created_at AT TIME ZONE 'Asia/Jakarta'
+  cabang (text)                  ← branches.name
+  kasir (text)                   ← users.full_name
+  status (text)                  ← map 'paid'→'lunas','void'→'batal','refund'→'retur'
+  subtotal_rp (int), diskon_rp (int), ppn_rp (int), total_rp (int), bayar_rp (int), kembali_rp (int)
+  metode_bayar (text)            ← agregat metode pembayaran
+
+b) vw_transaksi_item:
+  id_transaksi, nomor_struk, tanggal_wib
+  sku, barcode, nama_produk, qty, harga_satuan_rp, diskon_item_rp, ppn_item_rp, subtotal_item_rp
+  cabang, kasir
+
+c) vw_produk:
+  id_produk, sku, barcode, nama, kategori, merek, harga_jual_aktif_rp, stok_tersedia, status_aktif
+
+d) vw_mutasi_stok:
+  tanggal_wib, produk, cabang, jenis_mutasi(in/out/adjust/transfer), qty, keterangan
+
+e) vw_shift_kasir:
+  id_shift, cabang, kasir, buka_pada_wib, tutup_pada_wib, kas_awal_rp, kas_akhir_rp, penjualan_tunai_rp, penjualan_non_tunai_rp, selisih_kas_rp
+
+2.3 COMMENT (Indonesia) – contoh
+COMMENT ON VIEW vw_transaksi IS 'Ringkasan transaksi/struk dalam Bahasa Indonesia (WIB, Rupiah).';
+COMMENT ON TABLE pos_orders IS 'Tabel transaksi kasir (struk).';
+COMMENT ON COLUMN pos_orders.order_no IS 'Nomor struk / transaksi.';
+COMMENT ON COLUMN pos_orders.total IS 'Total akhir transaksi dalam Rupiah (integer).';
+
+2.4 Performa VIEW
+- Pastikan tabel sumber berindeks baik (lihat 1.2).
+- Untuk laporan berat/rekap harian/top produk: Materialized View + refresh terjadwal (di luar jam sibuk).
+
+======================================================================
+3) TEKNOLOGI UTAMA
+======================================================================
+Frontend & Desktop Shell
+- Next.js (App Router, SSR/Server Actions) – UI + API internal.
+- Tauri (WebView2/Edge) – shell desktop; sidecar untuk menjalankan Next.js standalone.
+- Fluent UI React v9 (@fluentui/react-components) – gaya Windows 11.
+  • Showcase/komponen: gunakan dokumentasi & gallery resmi Fluent v9 (Component Gallery/Storybook) sebagai referensi visual & pola interaksi.
+- TanStack Table v8 – tabel headless, server-driven (sort/filter/pagination), virtualized.
+- TanStack Query – data fetching & cache.
+- Zustand – state lokal (cart, hotkeys).
+- Zod – validasi schema.
+- (Opsional) Framer Motion – transisi halus.
+
+Backend & Data
+- PostgreSQL (VPS/Lokal), pooling via pgBouncer (opsional).
+- node-postgres / Drizzle ORM / Prisma (pilih salah satu).
+- Redis (opsional) untuk cache katalog panas & rate limiting.
+- Sentry (opsional) untuk error monitoring.
+
+Keamanan & Jaringan
+- Akses DB via VPN (WireGuard/Tailscale) atau SSH tunnel; jika publik → IP allowlist + SSL.
+- Origin lock WebView2 ke http://127.0.0.1:<port>; nonaktifkan devtools di production.
+- RBAC (role-based access) + (opsional) RLS per cabang pada tabel baca/tulis.
+
+Cetak & Perangkat
+- Tahap 1: Cetak via dialog (print CSS) / Print to PDF.
+- Tahap 2: Plugin Tauri untuk ESC/POS (USB/Serial) + buka cash drawer.
+
+======================================================================
+4) STRUKTUR FOLDER & FILE (MONOREPO)
+======================================================================
+/pos-suite/
+  /apps
+    /web/                 # Next.js (UI + API)
+      app/
+        pos/              # layar kasir
+        products/
+        orders/
+        inventory/
+        reports/
+        settings/
+        api/              # route handlers (list, search, checkout, export)
+      lib/
+        db/               # koneksi pg, migrasi, helpers (SET LOCAL user)
+        auth/             # Auth.js & RBAC
+        pricing.ts        # hitung harga/PPN (inclusive/exclusive)
+        permissions.ts    # guard server
+        validation/       # schema Zod
+      components/
+        ui/               # wrapper Fluent v9 (CommandBar, Dialogs, Buttons)
+        pos/              # cart table, product grid, payment modal, keypad
+        table/            # DataTableShell (TanStack Table + virtualized)
+      hooks/
+        useHotkeys.ts
+        useCart.ts
+        useOnlineQueue.ts (opsional offline-first)
+      styles/
+        globals.css
+      types/
+        domain.ts         # tipe Product, Order, Payment, dll.
+    /desktop/             # Tauri (Rust) + config + updater + sidecar manager
+      src-tauri/
+        tauri.conf.json
+        main.rs           # startup flow, watchdog, window, updater
+        sidecar/          # script jalankan Next.js standalone
+  /packages
+    /ui/                  # paket komponen berbagi (Fluent wrappers, status bar)
+    /core/                # logika domain (money, tax, discount, formatter)
+    /shared/              # types & schema Zod bersama
+  /ops
+    /scripts/             # build, healthcheck, seeding, export helpers
+    /packaging/           # ikon, MSI config, lisensi
+
+======================================================================
+5) MENU & TATA LETAK (INDONESIA)
+======================================================================
+A. Kasir (POS) – layar utama
+- Header/Command Bar: Cari (F2), Diskon (F4), Bayar (F7), Tahan/Panggil (F8), Retur (F9), Batal (F10), Cetak (Ctrl+P)
+- Panel kiri: input Barcode (fokus permanen), pencarian cepat, grid/tabel produk
+- Panel kanan: tabel Keranjang padat, Ringkasan (Subtotal, Diskon, PPN jika aktif, Total), metode bayar besar, keypad numerik (opsional)
+- Status Bar: Cabang | Kasir | #Sesi | Jam WIB | Online/Offline | Printer
+
+B. Produk & Harga
+- Produk, Kategori, Merek, Tingkat Harga (price level), PPN (tax groups), Promo/Voucher
+
+C. Persediaan
+- Stok per Cabang, Mutasi Stok, Transfer Antar Cabang, Opname (Penyesuaian), Riwayat
+
+D. Pembelian (fase 2)
+- Pesanan Pembelian → Penerimaan Barang → Faktur Hutang → Pembayaran Hutang
+
+E. Pelanggan & Pemasok
+- Master data, histori transaksi
+
+F. Kas & Bank
+- Kas Masuk/Keluar, rekonsiliasi harian
+
+G. Laporan
+- Penjualan Harian (per Kasir/Metode), Produk Terlaris, Margin Kotor (COGS), Retur, Stok Rendah, Laporan Shift
+
+H. Pengaturan
+- Cabang, Pengguna & Peran, Metode Pembayaran, Printer & Format Struk, PPN (aktif/rate/mode), Pembulatan, Zona Waktu
+
+======================================================================
+6) INTERAKSI & UX "KASIR TRADISIONAL"
+======================================================================
+- Keyboard-first: F2 Cari, F4 Diskon, F7 Bayar, F8 Tahan/Panggil, F9 Retur, F10 Batal, Ctrl+P Cetak, Del hapus item, Esc tutup dialog.
+- Densitas tinggi: komponen size "small", tabel padat, angka total besar & kontras.
+- Numpad-friendly: angka→qty/bayar; Enter konfirmasi.
+- Responsive untuk 1366×768 (mode padat) & 1080p.
+- Indikator status: hijau (online/lunas), oranye (tahan), merah (batal/error).
+
+======================================================================
+7) PAGINATION, SORT, FILTER (DATA BESAR)
+======================================================================
+- Seluruh operasi tabel dikendalikan server (server-driven).
+- Pagination: keyset/cursor (bukan OFFSET).
+- Sort: whitelist kolom berindeks saja.
+- Filter: tipe spesifik (range tanggal, enum status, min/max). Global search gunakan pg_trgm.
+- Approx count: tampilkan estimasi; tombol “Hitung akurat” on-demand.
+- Virtualization: @tanstack/react-virtual untuk scroll mulus.
+
+======================================================================
+8) PENGATURAN PPN & PEMBULATAN
+======================================================================
+- PPN aktif/nonaktif (global/per cabang), tarif default 11%.
+- Mode tax: inclusive (rekomendasi) atau exclusive.
+- Pembulatan: none | 50 | 100 (diterapkan di total akhir, tampilkan baris "Pembulatan").
+- Tampilkan/rekap PPN hanya bila PPN aktif; tetap simpan nilai di order untuk audit.
+
+======================================================================
+9) EKSPOR EXCEL & PDF
+======================================================================
+Excel (XLSX)
+- Sumber data: VIEW Indonesia (kolom & header sudah Indonesia, tanggal WIB).
+- Format angka: #,##0 (Rupiah tanpa desimal).
+- Batas ekspor instan: hingga 100.000 baris; ekspor penuh berjalan async.
+- Penamaan file: Transaksi_[Cabang]_[YYYYMMDD]_WIB.xlsx, Produk_[YYYYMMDD].xlsx
+- Lokasi default Tauri: Dokumen\POS\Exports
+
+PDF
+- Struk & laporan: render HTML Indonesia → print to PDF via WebView2/Tauri.
+- Header: logo toko, judul, periode WIB. Footer: “Dicetak pada [tanggal WIB]”, halaman x/y.
+- Simpan bersama path ekspor Excel (Dokumen\POS\Exports).
+
+======================================================================
+10) ARSITEKTUR TAURI + NEXT.JS (SIDECAR)
+======================================================================
+- Startup Flow: 
+  (1) Preflight (runtime, folder data) → 
+  (2) Pilih port lokal → 
+  (3) Jalankan Next.js (output: standalone) sebagai sidecar dengan env DB_URL → 
+  (4) Healthcheck /healthz (retry) → 
+  (5) Buka WebView2 ke http://127.0.0.1:<port> → 
+  (6) Watchdog sidecar (auto-restart) → 
+  (7) Graceful exit (SIGTERM).
+- Update: Tauri Updater, paketkan desktop + web (standalone) satu versi; channel stable/beta.
+- Keamanan: origin lock, disable devtools, whitelist IPC, hanya 127.0.0.1.
+
+======================================================================
+11) KEAMANAN & AUDIT
+======================================================================
+- Auth.js + RBAC; aksi sensitif (Retur/Batal) memerlukan otorisasi supervisor (PIN/OTP).
+- Logging peristiwa penting (checkout, refund, void) + idempotency key.
+- Audit trail perubahan harga & stok.
+- Backup: pg_dump terjadwal + uji restore; (opsional) WAL archiving.
+
+======================================================================
+12) ACCEPTANCE CRITERIA (MVP)
+======================================================================
+- Kasir: semua nilai tampil Rupiah TANPA desimal; total UI = total struk.
+- PPN: toggle berfungsi, mode inclusive/exclusive dihormati, ringkasan & VIEW konsisten.
+- VIEW Indonesia: vw_transaksi, vw_transaksi_item, vw_produk, vw_mutasi_stok, vw_shift_kasir tersedia & perform.
+- Ekspor: Excel & PDF dari VIEW Indonesia; nama file & format Indonesia; tanggal WIB.
+- Tauri: Next.js otomatis berjalan (sidecar), watchdog & graceful exit OK.
+- Hotkeys global & fokus input barcode selalu kembali setelah aksi.
+
+======================================================================
+13) BACKLOG & FASE
+======================================================================
+MVP (4 minggu indikatif)
+- Monorepo, Tauri shell (sidecar + watchdog), POS layar utama (scan, cart, bayar, cetak), Produk/Harga CRUD sederhana, Open/Close shift, Laporan harian sederhana, VIEW Indonesia + ekspor Excel/PDF, indeks kunci.
+Fase 2
+- ESC/POS native, Offline-first (IndexedDB + sync), Purchasing chain penuh, laporan lanjutan (top produk, margin detail), Materialized View.
+
+======================================================================
+14) KAMUS ISTILAH (INDONESIA → TEKNIS)
+======================================================================
+Transaksi/Struk → pos_orders (VIEW: vw_transaksi)
+Baris Transaksi → pos_order_lines (vw_transaksi_item)
+Kasir/Shift → users, pos_sessions (vw_shift_kasir)
+Produk → products (vw_produk)
+Mutasi Stok → stock_movements (vw_mutasi_stok)
+PPN → tax_groups / config.ppn_*
+
+======================================================================
+15) CATATAN FLUENT UI REACT v9 (SHOWCASE)
+======================================================================
+- Gunakan komponen & pola visual Fluent UI React v9 (Component Gallery/Storybook) untuk menyelaraskan gaya Windows (Command Bar, Nav, Dialog, DataGrid).
+- Terapkan “mode padat” (density kecil), ikon + label Indonesia, dan warna status yang konsisten (hijau/oranye/merah).
+- TanStack Table dikombinasikan dengan Fluent v9 (headless → wrapper komponen Fluent) untuk tampilan tabel kasir yang padat, pinning kolom, virtualized.
+
+======================================================================
+16) CATATAN IMPLEMENTASI TAMBAHAN
+======================================================================
+- Endpoint list generik: GET /api/<resource>?cursor=...&limit=50&sort=created_at.desc&filter[status]=lunas&search=...
+- Validasi param (Zod), whitelist kolom sort & filter.
+- Idempotency pada checkout untuk cegah duplikasi.
+- Penanganan “Hold/Panggil” pakai status atau tabel draft terpisah.
+- “Pembulatan” disimpan sebagai kolom di pos_orders untuk jejak audit.
+- Laporan harian menggunakan boundary WIB (00:00–23:59:59 WIB).
+
+== SELESAI ==
