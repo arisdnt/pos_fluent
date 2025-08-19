@@ -170,11 +170,11 @@ export const userRoles = pgTable('user_roles', {
 /**
  * Tabel Categories - Kategori produk
  */
-export const categories = pgTable('categories', {
+export const categories: any = pgTable('categories', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: varchar('name', { length: 255 }).notNull(),
   description: text('description'),
-  parentId: uuid('parent_id').references(() => categories.id),
+  parentId: uuid('parent_id').references((): any => categories.id),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()

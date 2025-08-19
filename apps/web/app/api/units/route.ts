@@ -190,15 +190,20 @@ function sortUnits(units: Unit[], sortBy: string, sortOrder: string): Unit[] {
     let aValue = a[sortBy as keyof Unit];
     let bValue = b[sortBy as keyof Unit];
 
-    if (typeof aValue === 'string') {
+    // Handle undefined values
+    if (aValue == null && bValue == null) return 0;
+    if (aValue == null) return sortOrder === 'asc' ? 1 : -1;
+    if (bValue == null) return sortOrder === 'asc' ? -1 : 1;
+
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
       aValue = aValue.toLowerCase();
-      bValue = (bValue as string).toLowerCase();
+      bValue = bValue.toLowerCase();
     }
 
-    if (aValue < bValue) {
+    if (aValue! < bValue!) {
       return sortOrder === 'asc' ? -1 : 1;
     }
-    if (aValue > bValue) {
+    if (aValue! > bValue!) {
       return sortOrder === 'asc' ? 1 : -1;
     }
     return 0;

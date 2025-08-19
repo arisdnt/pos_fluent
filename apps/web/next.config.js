@@ -9,6 +9,15 @@ const nextConfig = {
   experimental: {
     serverActions: {
       allowedOrigins: ['127.0.0.1', 'localhost']
+    },
+    // Enable Turbopack optimizations
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js'
+        }
+      }
     }
   },
   
@@ -35,11 +44,28 @@ const nextConfig = {
     ]
   },
   
+  // Development optimizations
+  onDemandEntries: {
+    // Period (in ms) where the server will keep pages in the buffer
+    maxInactiveAge: 25 * 1000,
+    // Number of pages that should be kept simultaneously without being disposed
+    pagesBufferLength: 2
+  },
+
   // Webpack configuration
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, dev }) => {
     // Optimize for desktop app
     if (isServer) {
       config.externals.push('pg-native')
+    }
+    
+    // Development optimizations
+    if (dev) {
+      config.watchOptions = {
+        poll: 1000,
+        aggregateTimeout: 300,
+        ignored: /node_modules/
+      }
     }
     
     return config

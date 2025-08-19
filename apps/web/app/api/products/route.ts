@@ -239,6 +239,9 @@ export async function POST(request: NextRequest) {
     const newProduct = {
       id: generateId(),
       ...productData,
+      deskripsi: productData.deskripsi || '',
+      barcode: productData.barcode || '',
+      gambar: productData.gambar || '',
       createdAt: new Date(),
       updatedAt: new Date()
     };

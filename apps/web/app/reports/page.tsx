@@ -1450,7 +1450,7 @@ function ReportsPageContent() {
               {exporting ? 'Mengekspor...' : 'Ekspor Excel'}
             </ToolbarButton>
             <ToolbarButton
-              appearance="secondary"
+              appearance="subtle"
               icon={<DocumentPdfRegular />}
               onClick={() => handleExport('pdf')}
               disabled={exporting || loading}

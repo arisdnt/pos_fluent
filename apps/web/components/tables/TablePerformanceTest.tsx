@@ -407,27 +407,7 @@ export function TablePerformanceTest() {
               sortable
               className={styles.dataGrid}
               getRowId={(item) => item.id}
-            >
-              <DataGridHeader>
-                {columns.map((column) => (
-                  <DataGridHeaderCell key={column.columnId}>
-                    {column.renderHeaderCell()}
-                  </DataGridHeaderCell>
-                ))}
-              </DataGridHeader>
-              
-              <DataGridBody<TestData>>
-                {({ item, rowId }) => (
-                  <DataGridRow<TestData> key={rowId}>
-                    {columns.map((column) => (
-                      <DataGridCell key={column.columnId}>
-                        {column.renderCell(item)}
-                      </DataGridCell>
-                    ))}
-                  </DataGridRow>
-                )}
-              </DataGridBody>
-            </DataGrid>
+            />
           </CardPreview>
         </Card>
       ) : (

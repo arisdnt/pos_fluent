@@ -260,7 +260,7 @@ function DetailRow({
           isTotal && 'text-blue-600'
         )}
       >
-        {isDiscount && value > 0 ? '-' : ''}{formattedValue}
+        {isDiscount && typeof value === 'number' && value > 0 ? '-' : ''}{formattedValue}
       </Text>
     </div>
   );

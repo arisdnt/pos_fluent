@@ -42,8 +42,7 @@ import {
   Divider,
   MessageBar,
   MessageBarBody,
-  MessageBarTitle,
-  Spinner
+  MessageBarTitle
 } from '@fluentui/react-components';
 import {
   Box24Regular,
@@ -393,6 +392,12 @@ const styles = {
   filtersGrid: 'grid grid-cols-1 md:grid-cols-4 gap-4',
   tableCard: 'overflow-hidden',
   actionButtons: 'flex items-center gap-2',
+  transferForm: 'space-y-4',
+  transferDialog: 'min-w-96',
+  stockByBranch: 'mt-4 p-3 bg-gray-50 rounded-lg space-y-2',
+  branchStock: 'flex justify-between items-center p-2 rounded',
+  lowStockAlert: 'bg-yellow-100 text-yellow-800',
+  outOfStockAlert: 'bg-red-100 text-red-800',
   statusBadge: {
     in_stock: 'bg-green-100 text-green-800',
     low_stock: 'bg-yellow-100 text-yellow-800',
@@ -458,10 +463,10 @@ const inventoryColumns: TableColumnDefinition<InventoryItem>[] = [
     renderHeaderCell: () => 'Status',
     renderCell: (item) => {
       const statusConfig = {
-        in_stock: { label: 'Stok Normal', appearance: 'success' as const },
-        low_stock: { label: 'Stok Menipis', appearance: 'warning' as const },
-        out_of_stock: { label: 'Habis', appearance: 'danger' as const },
-        overstock: { label: 'Berlebih', appearance: 'info' as const }
+        in_stock: { label: 'Stok Normal', appearance: 'tint' as const },
+        low_stock: { label: 'Stok Menipis', appearance: 'outline' as const },
+        out_of_stock: { label: 'Habis', appearance: 'filled' as const },
+        overstock: { label: 'Berlebih', appearance: 'ghost' as const }
       };
       
       const config = statusConfig[item.status];
@@ -504,7 +509,7 @@ const inventoryColumns: TableColumnDefinition<InventoryItem>[] = [
     renderHeaderCell: () => 'Terakhir Update',
     renderCell: (item) => (
       <TableCellLayout>
-        <Text size={200}>{formatDateTime(item.last_updated, 'dd/MM/yyyy HH:mm')}</Text>
+        <Text size={200}>{formatDateTime(item.last_updated, 'medium')}</Text>
       </TableCellLayout>
     )
   }),
@@ -528,9 +533,9 @@ const movementColumns: TableColumnDefinition<StockMovement>[] = [
     renderHeaderCell: () => 'Jenis',
     renderCell: (item) => {
       const typeConfig = {
-        in: { label: 'Masuk', appearance: 'success' as const, icon: <ArrowDownload24Regular /> },
-        out: { label: 'Keluar', appearance: 'danger' as const, icon: <ArrowUpload24Regular /> },
-        adjustment: { label: 'Penyesuaian', appearance: 'warning' as const, icon: <Edit24Regular /> }
+        in: { label: 'Masuk', appearance: 'tint' as const, icon: <ArrowDownload24Regular /> },
+        out: { label: 'Keluar', appearance: 'filled' as const, icon: <ArrowUpload24Regular /> },
+        adjustment: { label: 'Penyesuaian', appearance: 'outline' as const, icon: <Edit24Regular /> }
       };
       
       const config = typeConfig[item.movement_type];
@@ -591,9 +596,9 @@ const movementColumns: TableColumnDefinition<StockMovement>[] = [
     renderCell: (item) => (
       <TableCellLayout>
         <div>
-          <Text size={200}>{formatDateTime(item.created_at, 'dd/MM/yyyy')}</Text>
+          <Text size={200}>{formatDateTime(item.created_at, 'short')}</Text>
           <Text size={200} className="text-gray-600 block">
-            {formatDateTime(item.created_at, 'HH:mm')} - {item.created_by}
+            {formatDateTime(item.created_at, 'short')} - {item.created_by}
           </Text>
         </div>
       </TableCellLayout>
@@ -667,7 +672,7 @@ function TransferStockForm({ product, branches, onSubmit, onCancel }: TransferSt
             const branchStock = product?.branch_stocks?.find(bs => bs.branch_id === branch.id);
             const stock = branchStock?.current_stock || 0;
             return (
-              <Option key={branch.id} value={branch.id} disabled={stock === 0}>
+              <Option key={branch.id} value={branch.id} text={`${branch.name} (Stok: ${stock})`} disabled={stock === 0}>
                 {branch.name} (Stok: {stock})
               </Option>
             );
@@ -682,7 +687,7 @@ function TransferStockForm({ product, branches, onSubmit, onCancel }: TransferSt
           onOptionSelect={(e, data) => setToBranch(data.optionValue || '')}
         >
           {branches.filter(b => b.id !== fromBranch).map(branch => (
-            <Option key={branch.id} value={branch.id}>
+            <Option key={branch.id} value={branch.id} text={branch.name}>
               {branch.name}
             </Option>
           ))}
@@ -817,7 +822,7 @@ const transferColumns: TableColumnDefinition<StockTransfer>[] = [
     renderCell: (item) => (
       <TableCellLayout>
         <div>
-          <Text size={200}>{formatDateTime(item.created_at, 'dd/MM/yyyy HH:mm')}</Text>
+          <Text size={200}>{formatDateTime(item.created_at, 'medium')}</Text>
           <Text size={200} className="text-gray-600 block">{item.created_by}</Text>
         </div>
       </TableCellLayout>
@@ -913,7 +918,7 @@ function InventoryPageContent() {
         quantity: transferData.quantity,
         status: 'pending',
         created_at: new Date().toISOString(),
-        created_by: user?.name || 'Unknown',
+        created_by: user?.full_name || 'Unknown',
         notes: transferData.notes
       };
       
@@ -1089,13 +1094,13 @@ function InventoryPageContent() {
           {/* Timestamp */}
           <div>
             <Text className="text-gray-600 text-sm">
-              Terakhir diperbarui: {formatDateTime(selectedInventoryItem.last_updated, 'dd/MM/yyyy HH:mm')}
+              Terakhir diperbarui: {formatDateTime(selectedInventoryItem.last_updated, 'medium')}
             </Text>
           </div>
         </div>
       </div>
     );
-  };
+};
 
   const renderLeftContent = () => {
     return (
@@ -1110,7 +1115,7 @@ function InventoryPageContent() {
                 </div>
                 <div>
                   <Text size={200} className="text-gray-600">Total Produk</Text>
-                  <Title2>{stats.totalProducts.toLocaleString()}</Title2>
+                  <Title2>{stats?.totalProducts.toLocaleString() || '0'}</Title2>
                 </div>
               </div>
             </CardHeader>
@@ -1124,7 +1129,7 @@ function InventoryPageContent() {
                 </div>
                 <div>
                   <Text size={200} className="text-gray-600">Nilai Total</Text>
-                  <Title2>{formatCurrency(stats.totalValue)}</Title2>
+                  <Title2>{formatCurrency(stats?.totalValue || 0)}</Title2>
                 </div>
               </div>
             </CardHeader>
@@ -1138,7 +1143,7 @@ function InventoryPageContent() {
                 </div>
                 <div>
                   <Text size={200} className="text-gray-600">Stok Rendah</Text>
-                  <Title2 className="text-yellow-600">{stats.lowStockItems}</Title2>
+                  <Title2 className="text-yellow-600">{stats?.lowStockItems || 0}</Title2>
                 </div>
               </div>
             </CardHeader>
@@ -1152,7 +1157,7 @@ function InventoryPageContent() {
                 </div>
                 <div>
                   <Text size={200} className="text-gray-600">Stok Habis</Text>
-                  <Title2 className="text-red-600">{stats.outOfStockItems}</Title2>
+                  <Title2 className="text-red-600">{stats?.outOfStockItems || 0}</Title2>
                 </div>
               </div>
             </CardHeader>
@@ -1166,7 +1171,7 @@ function InventoryPageContent() {
                 </div>
                 <div>
                   <Text size={200} className="text-gray-600">Overstock</Text>
-                  <Title2 className="text-blue-600">{stats.overstockItems}</Title2>
+                  <Title2 className="text-blue-600">{stats?.overstockItems || 0}</Title2>
                 </div>
               </div>
             </CardHeader>
@@ -1190,9 +1195,9 @@ function InventoryPageContent() {
                 value={categoryFilter}
                 onOptionSelect={(_, data) => setCategoryFilter(data.optionValue || 'all')}
               >
-                <Option value="all">Semua Kategori</Option>
+                <Option value="all" text="Semua Kategori">Semua Kategori</Option>
                 {categories.map(category => (
-                  <Option key={category} value={category}>{category}</Option>
+                  <Option key={category} value={category} text={category}>{category}</Option>
                 ))}
               </Dropdown>
             </Field>
@@ -1202,11 +1207,11 @@ function InventoryPageContent() {
                 value={statusFilter}
                 onOptionSelect={(_, data) => setStatusFilter(data.optionValue || 'all')}
               >
-                <Option value="all">Semua Status</Option>
-                <Option value="in_stock">Tersedia</Option>
-                <Option value="low_stock">Stok Rendah</Option>
-                <Option value="out_of_stock">Stok Habis</Option>
-                <Option value="overstock">Overstock</Option>
+                <Option value="all" text="Semua Status">Semua Status</Option>
+            <Option value="in_stock" text="Tersedia">Tersedia</Option>
+            <Option value="low_stock" text="Stok Rendah">Stok Rendah</Option>
+            <Option value="out_of_stock" text="Stok Habis">Stok Habis</Option>
+            <Option value="overstock" text="Overstock">Overstock</Option>
               </Dropdown>
             </Field>
             <Field label="Cabang">
@@ -1215,9 +1220,9 @@ function InventoryPageContent() {
                 value={selectedBranch}
                 onOptionSelect={(_, data) => setSelectedBranch(data.optionValue || 'all')}
               >
-                <Option value="all">Semua Cabang</Option>
+                <Option value="all" text="Semua Cabang">Semua Cabang</Option>
                 {mockBranches.map(branch => (
-                  <Option key={branch.id} value={branch.id}>{branch.name}</Option>
+                  <Option key={branch.id} value={branch.id} text={branch.name}>{branch.name}</Option>
                 ))}
               </Dropdown>
             </Field>
@@ -1313,68 +1318,19 @@ function InventoryPageContent() {
   }
 
   return (
-    <TwoColumnLayout
-      title="Manajemen Inventori"
-      subtitle="Kelola stok dan pergerakan inventori produk"
-      searchValue={searchQuery}
-      onSearchChange={setSearchQuery}
-      searchPlaceholder="Cari produk atau SKU..."
-      addButtonText="Penyesuaian Stok"
-      onAddClick={() => router.push('/inventory/adjustment')}
-      headerActions={[
-        <ExportButton
-          key="export"
-          onExport={handleExport}
-          isLoading={isExporting}
-          data={filteredInventoryItems}
-          filename="inventori"
-        />,
-        <AdvancedExportButton
-          key="advanced-export"
-          onExport={handleExport}
-          isLoading={isExporting}
-          reportType="inventory"
-        />,
-        hasPermission('inventory.create') && (
-          <Button
-            key="transfer"
-            appearance="secondary"
-            icon={<ArrowSwap24Regular />}
-            onClick={() => setIsTransferDialogOpen(true)}
-          >
-            Transfer Stok
-          </Button>
-        )
-      ].filter(Boolean)}
-      leftContent={renderLeftContent()}
-      rightContent={renderInventoryDetail()}
-      rightActions={selectedInventoryItem ? [
-        <Button
-          key="edit"
-          appearance="secondary"
-          icon={<Edit24Regular />}
-          onClick={() => handleInventoryItemEdit(selectedInventoryItem)}
-        >
-          Edit Stok
-        </Button>,
-        <Button
-          key="history"
-          appearance="secondary"
-          icon={<History24Regular />}
-          onClick={() => console.log('View history:', selectedInventoryItem.id)}
-        >
-          Riwayat
-        </Button>,
-        <Button
-          key="delete"
-          appearance="secondary"
-          icon={<Delete24Regular />}
-          onClick={() => handleInventoryItemDelete(selectedInventoryItem.id)}
-        >
-          Hapus
-        </Button>
-      ] : []}
-    />
+    <>
+      <TwoColumnLayout
+        title="Manajemen Inventori"
+        searchPlaceholder="Cari produk atau SKU..."
+        onSearch={setSearchQuery}
+        onAdd={() => router.push('/inventory/adjustment')}
+        addButtonText="Penyesuaian Stok"
+        leftContent={renderLeftContent()}
+        selectedItem={selectedInventoryItem}
+        onEdit={selectedInventoryItem ? () => handleInventoryItemEdit(selectedInventoryItem) : undefined}
+        onDelete={selectedInventoryItem ? () => handleInventoryItemDelete(selectedInventoryItem) : undefined}
+        rightContent={renderInventoryDetail()}
+      />
 
       {/* Transfer Stock Dialog */}
       <Dialog open={isTransferDialogOpen} onOpenChange={(e, data) => setIsTransferDialogOpen(data.open)}>
@@ -1393,7 +1349,7 @@ function InventoryPageContent() {
           </DialogContent>
         </DialogSurface>
       </Dialog>
-    </div>
+    </>
   );
   }
 

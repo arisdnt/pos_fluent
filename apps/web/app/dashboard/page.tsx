@@ -47,7 +47,7 @@ import { formatDateTime } from '@/lib/utils/date';
 import { cn } from '@/lib/utils/cn';
 import { useKeyboard } from '@/lib/keyboard/keyboard-provider';
 import { SalesTrendChart, PaymentMethodChart, ProductCategoryChart, mockChartData } from '@/components/reports/ReportCharts';
-import { MainLayout } from '@/app/components/layout/MainLayout';
+import { MainLayout } from '@/components/layout/main-layout';
 
 // ======================================================================
 // TIPE DATA
@@ -250,7 +250,7 @@ const transactionColumns: TableColumnDefinition<RecentTransaction>[] = [
     renderHeaderCell: () => 'Waktu',
     renderCell: (item) => (
       <TableCellLayout>
-        <Text size={200}>{formatDateTime(item.created_at, 'HH:mm')}</Text>
+        <Text size={200}>{formatDateTime(item.created_at, 'short')}</Text>
       </TableCellLayout>
     )
   })
@@ -365,7 +365,7 @@ function DashboardContent() {
         </div>
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <ClockRegular />
-          <Text>{formatDateTime(new Date().toISOString(), 'dd MMMM yyyy, HH:mm')}</Text>
+          <Text>{formatDateTime(new Date().toISOString(), 'long')}</Text>
         </div>
       </div>
 
@@ -540,30 +540,9 @@ function DashboardContent() {
 // ======================================================================
 
 export default function DashboardPage() {
-  const router = useRouter();
-
-  const handleNavigation = (path: string) => {
-    router.push(path);
-  };
-
-  const handleLogout = () => {
-    // Implementasi logout akan ditambahkan nanti
-    router.push('/login');
-  };
-
-  const handleThemeToggle = () => {
-    // Implementasi theme toggle akan ditambahkan nanti
-    console.log('Theme toggle clicked');
-  };
-
   return (
     <ProtectedRoute>
-      <MainLayout
-        onNavigate={handleNavigation}
-        onLogout={handleLogout}
-        onThemeToggle={handleThemeToggle}
-        isDarkMode={false}
-      >
+      <MainLayout>
         <DashboardContent />
       </MainLayout>
     </ProtectedRoute>

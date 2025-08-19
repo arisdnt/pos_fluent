@@ -54,7 +54,7 @@ import {
   Edit24Regular,
   Delete24Regular,
   Star24Regular,
-  StarFilled24Regular,
+  Star24Filled,
   Phone24Regular,
   Mail24Regular,
   Location24Regular,
@@ -346,7 +346,7 @@ const customerColumns: TableColumnDefinition<Customer>[] = [
           <div>
             <Badge appearance={config.appearance}>{config.label}</Badge>
             <Text size={200} className="text-gray-600 block mt-1">
-              Sejak {formatDateTime(item.member_since, 'MMM yyyy')}
+              Sejak {formatDateTime(item.member_since, 'medium')}
             </Text>
           </div>
         </TableCellLayout>
@@ -393,7 +393,7 @@ const customerColumns: TableColumnDefinition<Customer>[] = [
       <TableCellLayout>
         <Text size={200}>
           {item.last_transaction 
-            ? formatDateTime(item.last_transaction, 'dd/MM/yyyy')
+            ? formatDateTime(item.last_transaction, 'short')
             : 'Belum ada'
           }
         </Text>
@@ -406,9 +406,9 @@ const customerColumns: TableColumnDefinition<Customer>[] = [
     renderHeaderCell: () => 'Status',
     renderCell: (item) => {
       const statusConfig = {
-        active: { label: 'Aktif', appearance: 'success' as const },
-        inactive: { label: 'Tidak Aktif', appearance: 'secondary' as const },
-        blocked: { label: 'Diblokir', appearance: 'danger' as const }
+        active: { label: 'Aktif', appearance: 'tint' as const },
+        inactive: { label: 'Tidak Aktif', appearance: 'outline' as const },
+        blocked: { label: 'Diblokir', appearance: 'filled' as const }
       };
       
       const config = statusConfig[item.status];
@@ -607,7 +607,7 @@ function CustomersPageContent() {
             <div>
               <Text size={200} className="text-gray-600">Member Sejak</Text>
               <Text weight="semibold">
-                {formatDateTime(selectedCustomer.member_since, 'dd/MM/yyyy')}
+                {formatDateTime(selectedCustomer.member_since, 'short')}
               </Text>
             </div>
             <div>
@@ -620,7 +620,7 @@ function CustomersPageContent() {
               <div>
                 <Text size={200} className="text-gray-600">Tanggal Lahir</Text>
                 <Text weight="semibold">
-                  {formatDateTime(selectedCustomer.birth_date, 'dd/MM/yyyy')}
+                  {formatDateTime(selectedCustomer.birth_date, 'short')}
                 </Text>
               </div>
             )}
@@ -651,7 +651,7 @@ function CustomersPageContent() {
               <Text size={200} className="text-gray-600">Transaksi Terakhir</Text>
               <Text weight="semibold">
                 {selectedCustomer.last_transaction 
-                  ? formatDateTime(selectedCustomer.last_transaction, 'dd/MM/yyyy HH:mm')
+                  ? formatDateTime(selectedCustomer.last_transaction, 'medium')
                   : 'Belum ada transaksi'
                 }
               </Text>
@@ -673,11 +673,11 @@ function CustomersPageContent() {
           <div className="space-y-2">
             <div>
               <Text size={200} className="text-gray-600">Dibuat</Text>
-              <Text>{formatDateTime(selectedCustomer.created_at, 'dd/MM/yyyy HH:mm')}</Text>
+              <Text>{formatDateTime(selectedCustomer.created_at, 'medium')}</Text>
             </div>
             <div>
               <Text size={200} className="text-gray-600">Diperbarui</Text>
-              <Text>{formatDateTime(selectedCustomer.updated_at, 'dd/MM/yyyy HH:mm')}</Text>
+              <Text>{formatDateTime(selectedCustomer.updated_at, 'medium')}</Text>
             </div>
           </div>
         </Card>
@@ -689,6 +689,25 @@ function CustomersPageContent() {
   const renderLeftContent = () => {
     return (
       <div className="space-y-6">
+        {/* Export Buttons */}
+        <div className="flex items-center gap-2 mb-4">
+          <ExportButton
+            format="excel"
+            reportType="customers"
+            reportData={filteredCustomers}
+            onExport={async (options) => {
+              console.log('Exporting customers:', options);
+            }}
+          />
+          <AdvancedExportButton
+            reportType="customers"
+            reportData={filteredCustomers}
+            onExport={async (options) => {
+              console.log('Advanced export customers:', options);
+            }}
+          />
+        </div>
+
         {/* Stats Cards */}
         <div className={styles.statsGrid}>
           <Card className="p-4">
@@ -933,58 +952,15 @@ function CustomersPageContent() {
   return (
     <TwoColumnLayout
       title="Manajemen Pelanggan"
-      subtitle="Kelola data pelanggan dan program member"
-      searchValue={searchQuery}
-      onSearchChange={setSearchQuery}
       searchPlaceholder="Cari nama, kode, telepon, atau email..."
-      addButton={
-        hasPermission('customers.create') ? {
-          label: 'Tambah Pelanggan',
-          onClick: () => router.push('/customers/new')
-        } : undefined
-      }
-      headerActions={
-        <div className="flex items-center gap-2">
-          <ExportButton
-            onExport={handleExport}
-            isLoading={isExporting}
-            data={filteredCustomers}
-            filename="data_pelanggan"
-          />
-          <AdvancedExportButton
-            onExport={handleExport}
-            isLoading={isExporting}
-            reportType="customers"
-          />
-        </div>
-      }
+      onSearch={setSearchQuery}
+      onAdd={hasPermission('customers.create') ? () => router.push('/customers/new') : undefined}
+      addButtonText="Tambah Pelanggan"
       leftContent={renderLeftContent()}
+      selectedItem={selectedCustomer}
+      onEdit={selectedCustomer && hasPermission('customers.update') ? handleCustomerEdit : undefined}
+      onDelete={selectedCustomer && hasPermission('customers.delete') ? handleCustomerDelete : undefined}
       rightContent={renderCustomerDetail()}
-      rightTitle="Detail Pelanggan"
-      rightActions={
-        selectedCustomer && hasPermission('customers.update') ? (
-          <div className="flex items-center gap-2">
-            <Button
-              size="small"
-              appearance="outline"
-              icon={<Edit24Regular />}
-              onClick={() => handleCustomerEdit(selectedCustomer)}
-            >
-              Edit
-            </Button>
-            {hasPermission('customers.delete') && (
-              <Button
-                size="small"
-                appearance="outline"
-                icon={<Delete24Regular />}
-                onClick={() => handleCustomerDelete(selectedCustomer)}
-              >
-                Hapus
-              </Button>
-            )}
-          </div>
-        ) : undefined
-      }
     />
   );
 }

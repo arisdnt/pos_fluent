@@ -20,7 +20,6 @@ import {
   MenuPopover,
   MenuList,
   MenuItem,
-  MenuDivider,
   Dialog,
   DialogTrigger,
   DialogSurface,
@@ -33,7 +32,7 @@ import {
 } from '@fluentui/react-components';
 import {
   Home24Regular,
-  ShoppingCart24Regular,
+  Cart24Regular,
   Box24Regular,
   People24Regular,
   DocumentTable24Regular,
@@ -41,8 +40,10 @@ import {
   SignOut24Regular,
   ChevronLeft24Regular,
   ChevronRight24Regular,
+  ChevronDown24Regular,
+  Menu24Regular,
   Navigation24Regular,
-  Store24Regular,
+  Building24Regular,
   Receipt24Regular,
   Calculator24Regular,
   ChartMultiple24Regular,
@@ -50,7 +51,7 @@ import {
   Person24Regular,
   Key24Regular,
   Print24Regular,
-  Backup24Regular,
+  Archive24Regular,
   Info24Regular,
   Warning24Filled,
   CheckmarkCircle24Filled,
@@ -100,7 +101,7 @@ const navigationItems: NavigationItem[] = [
   {
     id: 'pos',
     label: 'Kasir (POS)',
-    icon: <ShoppingCart24Regular />,
+    icon: <Cart24Regular />,
     href: '/pos',
     badge: 'F1'
   },
@@ -125,7 +126,7 @@ const navigationItems: NavigationItem[] = [
       {
         id: 'products-brands',
         label: 'Merek',
-        icon: <Store24Regular />,
+        icon: <Building24Regular />,
         href: '/products/brands'
       }
     ]
@@ -237,7 +238,7 @@ const navigationItems: NavigationItem[] = [
       {
         id: 'settings-backup',
         label: 'Backup & Restore',
-        icon: <Backup24Regular />,
+        icon: <Archive24Regular />,
         href: '/settings/backup',
         permission: 'manage_backup'
       }
@@ -262,10 +263,11 @@ export default function MainLayout({
   const { user, logout } = useAuth();
   const { showHelp, registerAction, unregisterAction } = useKeyboard();
   
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [connectionStatus, setConnectionStatus] = useState<'online' | 'offline' | 'checking'>('online');
+  const [connectionStatus, setConnectionStatus] = useState<'online' | 'offline'>('online');
 
   // Update current time every minute
   useEffect(() => {
@@ -302,7 +304,6 @@ export default function MainLayout({
     registerAction('navigate-reports', () => router.push('/reports'));
     registerAction('navigate-orders', () => router.push('/orders'));
     registerAction('navigate-settings', () => router.push('/settings'));
-    registerAction('toggle-sidebar', () => setSidebarCollapsed(!sidebarCollapsed));
     registerAction('logout', () => setShowLogoutDialog(true));
     registerAction('refresh-page', () => window.location.reload());
 
@@ -315,11 +316,10 @@ export default function MainLayout({
       unregisterAction('navigate-reports');
       unregisterAction('navigate-orders');
       unregisterAction('navigate-settings');
-      unregisterAction('toggle-sidebar');
       unregisterAction('logout');
       unregisterAction('refresh-page');
     };
-  }, [router, registerAction, unregisterAction, sidebarCollapsed]);
+  }, [router, registerAction, unregisterAction]);
 
   const handleLogout = async () => {
     try {
@@ -339,7 +339,7 @@ export default function MainLayout({
     return pathname.startsWith(href);
   };
 
-  const renderNavigationItem = (item: NavigationItem, level: number = 0) => {
+  const renderNavigationItem = (item: NavigationItem) => {
     const isActive = isActiveRoute(item.href);
     const hasChildren = item.children && item.children.length > 0;
     
@@ -348,189 +348,268 @@ export default function MainLayout({
       return null;
     }
 
-    return (
-      <div key={item.id}>
-        <Button
-          appearance={isActive ? 'primary' : 'subtle'}
-          className={cn(
-            'w-full justify-start mb-1',
-            level > 0 && 'ml-4',
-            sidebarCollapsed && 'justify-center'
-          )}
-          icon={item.icon}
-          onClick={() => {
-            if (!hasChildren) {
-              router.push(item.href);
-            }
-          }}
-        >
-          {!sidebarCollapsed && (
-            <div className="flex items-center justify-between w-full">
-              <span>{item.label}</span>
+    if (hasChildren) {
+      // Render dropdown menu for items with children
+      return (
+        <Menu key={item.id}>
+          <MenuTrigger>
+            <Button
+              appearance={isActive ? 'primary' : 'subtle'}
+              className="flex items-center space-x-1 px-3 py-2 text-sm"
+            >
+              {item.icon}
+              <span className="hidden xl:inline">{item.label}</span>
+              <ChevronDown24Regular className="w-3 h-3" />
               {item.badge && (
                 <Badge size="small" appearance="outline">
                   {item.badge}
                 </Badge>
               )}
-            </div>
+            </Button>
+          </MenuTrigger>
+          <MenuPopover>
+            <MenuList>
+              {/* Main item */}
+              <MenuItem
+                icon={item.icon}
+                onClick={() => router.push(item.href)}
+              >
+                {item.label}
+              </MenuItem>
+              {/* Children items */}
+              {item.children!.map(child => {
+                if (child.permission && !user?.permissions?.includes(child.permission)) {
+                  return null;
+                }
+                return (
+                  <MenuItem
+                    key={child.id}
+                    icon={child.icon}
+                    onClick={() => router.push(child.href)}
+                  >
+                    {child.label}
+                  </MenuItem>
+                );
+              })}
+            </MenuList>
+          </MenuPopover>
+        </Menu>
+      );
+    } else {
+      // Render simple button for items without children
+      return (
+        <Button
+          key={item.id}
+          appearance={isActive ? 'primary' : 'subtle'}
+          className="flex items-center space-x-1 px-3 py-2 text-sm"
+          onClick={() => router.push(item.href)}
+        >
+          {item.icon}
+          <span className="hidden xl:inline">{item.label}</span>
+          {item.badge && (
+            <Badge size="small" appearance="outline">
+              {item.badge}
+            </Badge>
           )}
         </Button>
-        
-        {/* Render children if expanded and has children */}
-        {hasChildren && !sidebarCollapsed && (
-          <div className="ml-2">
-            {item.children!.map(child => renderNavigationItem(child, level + 1))}
-          </div>
-        )}
-      </div>
-    );
+      );
+    }
   };
 
   return (
-    <div className="h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className={cn(
-        'bg-white border-r border-gray-200 flex flex-col transition-all duration-300',
-        sidebarCollapsed ? 'w-16' : 'w-64'
-      )}>
-        {/* Sidebar Header */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            {!sidebarCollapsed && (
-              <div>
-                <Title3 className="text-blue-600">KasirPro</Title3>
-                <Caption1 className="text-gray-600">Sistem Kasir Modern</Caption1>
-              </div>
-            )}
-            <Button
-              appearance="subtle"
-              icon={sidebarCollapsed ? <ChevronRight24Regular /> : <ChevronLeft24Regular />}
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              size="small"
-            />
+    <div className="h-screen bg-gray-50 flex flex-col">
+      {/* Top Navigation Bar */}
+      <div className="bg-white border-b border-gray-200 flex-shrink-0">
+        <div className="flex items-center justify-between px-4 py-3">
+          {/* Left: Logo and Navigation */}
+          <div className="flex items-center space-x-6">
+            {/* Logo */}
+            <div className="flex items-center space-x-2">
+              <Title3 className="text-blue-600">KasirPro</Title3>
+              <Caption1 className="text-gray-600 hidden md:block">Sistem Kasir Modern</Caption1>
+            </div>
+            
+            {/* Navigation Menu */}
+            <nav className="hidden lg:flex items-center space-x-1">
+              {navigationItems.map(item => renderNavigationItem(item))}
+            </nav>
+            
+            {/* Mobile Menu Button */}
+            <Menu>
+              <MenuTrigger>
+                <Button
+                  appearance="subtle"
+                  icon={<Menu24Regular />}
+                  className="lg:hidden"
+                  aria-label="Menu"
+                />
+              </MenuTrigger>
+              <MenuPopover>
+                <MenuList>
+                  {navigationItems.map(item => {
+                    if (item.permission && !user?.permissions?.includes(item.permission)) {
+                      return null;
+                    }
+                    
+                    if (item.children && item.children.length > 0) {
+                      return (
+                        <div key={item.id}>
+                          <MenuItem
+                            icon={item.icon}
+                            onClick={() => router.push(item.href)}
+                          >
+                            {item.label}
+                            {item.badge && (
+                              <Badge size="small" appearance="outline" className="ml-2">
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </MenuItem>
+                          {item.children.map(child => {
+                            if (child.permission && !user?.permissions?.includes(child.permission)) {
+                              return null;
+                            }
+                            return (
+                              <MenuItem
+                                key={child.id}
+                                icon={child.icon}
+                                onClick={() => router.push(child.href)}
+                                className="pl-8"
+                              >
+                                {child.label}
+                              </MenuItem>
+                            );
+                          })}
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <MenuItem
+                          key={item.id}
+                          icon={item.icon}
+                          onClick={() => router.push(item.href)}
+                        >
+                          {item.label}
+                          {item.badge && (
+                            <Badge size="small" appearance="outline" className="ml-2">
+                              {item.badge}
+                            </Badge>
+                          )}
+                        </MenuItem>
+                      );
+                    }
+                  })}
+                </MenuList>
+              </MenuPopover>
+            </Menu>
           </div>
-        </div>
-
-        {/* Navigation */}
-        <div className="flex-1 overflow-auto p-4">
-          <nav className="space-y-1">
-            {navigationItems.map(item => renderNavigationItem(item))}
-          </nav>
-        </div>
-
-        {/* Sidebar Footer */}
-        <div className="p-4 border-t border-gray-200">
-          {!sidebarCollapsed && (
-            <div className="space-y-2">
-              {/* Connection Status */}
-              <div className="flex items-center space-x-2">
-                <div className={cn(
-                  'w-2 h-2 rounded-full',
-                  connectionStatus === 'online' ? 'bg-green-500' : 'bg-red-500'
-                )}></div>
-                <Caption1 className="text-gray-600">
-                  {connectionStatus === 'online' ? 'Online' : 'Offline'}
-                </Caption1>
-              </div>
-              
-              {/* Current Time */}
-              <Caption1 className="text-gray-600">
-                {formatDateTime(currentTime, 'EEEE, dd MMM yyyy')}
-              </Caption1>
-              <Caption1 className="text-gray-600 font-mono">
-                {formatDateTime(currentTime, 'HH:mm:ss')}
+          
+          {/* Right: Status and User Menu */}
+          <div className="flex items-center space-x-4">
+            {/* Connection Status */}
+            <div className="flex items-center space-x-2">
+              <div className={cn(
+                'w-2 h-2 rounded-full',
+                connectionStatus === 'online' ? 'bg-green-500' : 'bg-red-500'
+              )}></div>
+              <Caption1 className="text-gray-600 hidden md:block">
+                {connectionStatus === 'online' ? 'Online' : 'Offline'}
               </Caption1>
             </div>
-          )}
+            
+            {/* Current Time */}
+            <Caption1 className="text-gray-600 font-mono hidden lg:block">
+              {formatDateTime(currentTime, 'HH:mm:ss')}
+            </Caption1>
+            
+            {/* User Menu */}
+            <Menu>
+              <MenuTrigger>
+                <Button
+                  appearance="subtle"
+                  className="flex items-center space-x-2"
+                >
+                  <Avatar name={user?.full_name} size={28} />
+                  <div className="text-left hidden md:block">
+                    <Text weight="semibold" className="block text-sm">{user?.full_name}</Text>
+                    <Caption1 className="text-gray-600">{user?.roles?.[0]?.role_name}</Caption1>
+                  </div>
+                  <ChevronDown24Regular className="text-gray-500" />
+                </Button>
+              </MenuTrigger>
+              <MenuPopover>
+                <MenuList>
+                  <MenuItem
+                    icon={<Person24Regular />}
+                    onClick={() => router.push('/profile')}
+                  >
+                    Profil Saya
+                  </MenuItem>
+                  <MenuItem
+                    icon={<Settings24Regular />}
+                    onClick={() => router.push('/settings')}
+                  >
+                    Pengaturan
+                  </MenuItem>
+                  <MenuItem
+                    icon={<QuestionCircle24Regular />}
+                    onClick={showHelp}
+                  >
+                    Bantuan & Shortcuts (F1)
+                  </MenuItem>
+                  <MenuItem
+                    icon={<Info24Regular />}
+                    onClick={() => toast('KasirPro v1.0.0 - Sistem Kasir Modern')}
+                  >
+                    Tentang Aplikasi
+                  </MenuItem>
+                  <MenuItem
+                    icon={<SignOut24Regular />}
+                    onClick={() => setShowLogoutDialog(true)}
+                  >
+                    Keluar (Ctrl+Shift+L)
+                  </MenuItem>
+                </MenuList>
+              </MenuPopover>
+            </Menu>
+          </div>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Bar */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              {showBackButton && (
-                <Button
-                  appearance="subtle"
-                  icon={<ChevronLeft24Regular />}
-                  onClick={() => router.push(backHref)}
-                >
-                  Kembali
-                </Button>
-              )}
-              
-              <div>
-                {title && <Title3>{title}</Title3>}
-                {subtitle && (
-                  <Caption1 className="text-gray-600">{subtitle}</Caption1>
+        {/* Page Header */}
+        {(title || subtitle || showBackButton || actions) && (
+          <div className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                {showBackButton && (
+                  <Button
+                    appearance="subtle"
+                    icon={<ChevronLeft24Regular />}
+                    onClick={() => router.push(backHref)}
+                  >
+                    Kembali
+                  </Button>
                 )}
+                
+                <div>
+                  {title && <Title3>{title}</Title3>}
+                  {subtitle && (
+                    <Caption1 className="text-gray-600">{subtitle}</Caption1>
+                  )}
+                </div>
               </div>
-            </div>
-            
-            <div className="flex items-center space-x-4">
+              
               {/* Actions */}
               {actions && (
                 <div className="flex items-center space-x-2">
                   {actions}
                 </div>
               )}
-              
-              {/* User Menu */}
-              <Menu>
-                <MenuTrigger disableButtonEnhancement>
-                  <Button
-                    appearance="subtle"
-                    className="flex items-center space-x-2"
-                  >
-                    <Avatar name={user?.name} size={32} />
-                    <div className="text-left hidden md:block">
-                      <Text weight="semibold" className="block">{user?.name}</Text>
-                      <Caption1 className="text-gray-600">{user?.role}</Caption1>
-                    </div>
-                  </Button>
-                </MenuTrigger>
-                <MenuPopover>
-                  <MenuList>
-                    <MenuItem
-                      icon={<Person24Regular />}
-                      onClick={() => router.push('/profile')}
-                    >
-                      Profil Saya
-                    </MenuItem>
-                    <MenuItem
-                      icon={<Settings24Regular />}
-                      onClick={() => router.push('/settings')}
-                    >
-                      Pengaturan
-                    </MenuItem>
-                    <MenuItem
-                      icon={<QuestionCircle24Regular />}
-                      onClick={showHelp}
-                    >
-                      Bantuan & Shortcuts (F1)
-                    </MenuItem>
-                    <MenuDivider />
-                    <MenuItem
-                      icon={<Info24Regular />}
-                      onClick={() => toast.info('KasirPro v1.0.0 - Sistem Kasir Modern')}
-                    >
-                      Tentang Aplikasi
-                    </MenuItem>
-                    <MenuDivider />
-                    <MenuItem
-                      icon={<SignOut24Regular />}
-                      onClick={() => setShowLogoutDialog(true)}
-                    >
-                      Keluar (Ctrl+Shift+L)
-                    </MenuItem>
-                  </MenuList>
-                </MenuPopover>
-              </Menu>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Connection Status Bar */}
         {connectionStatus === 'offline' && (
@@ -619,3 +698,6 @@ export function FullLayout({ children }: { children: React.ReactNode }) {
     </MainLayout>
   );
 }
+
+// Export MainLayout as named export for backward compatibility
+export { MainLayout };

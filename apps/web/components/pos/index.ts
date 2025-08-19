@@ -16,12 +16,12 @@ export { default as TransactionHistory } from './transaction-history';
 // Export types from each component
 export type {
   CartItem,
-  ShoppingCartProps
+  CartTotals
 } from './shopping-cart';
 
 export type {
   PaymentMethod,
-  SplitPayment,
+  PaymentSplit,
   PaymentDialogProps
 } from './payment-dialog';
 

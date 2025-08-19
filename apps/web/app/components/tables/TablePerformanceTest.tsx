@@ -34,7 +34,7 @@ import {
 import {
   Play24Regular,
   Stop24Regular,
-  Refresh24Regular,
+  ArrowClockwise24Regular,
   Database24Regular,
   Timer24Regular,
   ChartMultiple24Regular,
@@ -129,8 +129,8 @@ const usePerformanceMonitor = () => {
     setMetrics([]);
     
     const interval = setInterval(() => {
-      if (performance.memory) {
-        const memory = (performance.memory as any);
+      if ((performance as any).memory) {
+        const memory = (performance as any).memory;
         const newMetrics: PerformanceMetrics = {
           renderTime: performance.now(),
           memoryUsage: memory.usedJSHeapSize / 1024 / 1024, // MB
@@ -460,7 +460,7 @@ export function TablePerformanceTest() {
         <div className="flex items-center gap-4">
           <Button
             appearance="primary"
-            icon={<Refresh24Regular />}
+            icon={<ArrowClockwise24Regular />}
             onClick={handleGenerateData}
             disabled={isGenerating}
           >

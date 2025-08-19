@@ -52,8 +52,8 @@ import {
   ArrowSort24Regular,
   Eye24Regular,
   EyeOff24Regular,
-  Download24Regular,
-  Refresh24Regular,
+  ArrowDownload24Regular,
+  ArrowClockwise24Regular,
   MoreHorizontal24Regular
 } from '@fluentui/react-icons';
 import { cn } from '@/lib/utils/cn';
@@ -171,7 +171,6 @@ export function OptimizedDataTable<T>({
         header: ({ table }) => (
           <Checkbox
             checked={table.getIsAllRowsSelected()}
-            indeterminate={table.getIsSomeRowsSelected()}
             onChange={table.getToggleAllRowsSelectedHandler()}
           />
         ),
@@ -377,7 +376,7 @@ export function OptimizedDataTable<T>({
           {onRefresh && (
             <Button
               appearance="outline"
-              icon={<Refresh24Regular />}
+              icon={<ArrowClockwise24Regular />}
               onClick={handleRefresh}
             >
               Refresh
@@ -387,7 +386,7 @@ export function OptimizedDataTable<T>({
           {onExport && (
             <Button
               appearance="outline"
-              icon={<Download24Regular />}
+              icon={<ArrowDownload24Regular />}
               onClick={handleExport}
             >
               Export

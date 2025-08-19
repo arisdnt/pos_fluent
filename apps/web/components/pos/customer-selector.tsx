@@ -44,7 +44,7 @@ import {
   Building24Regular,
   Calendar24Regular,
   Star24Regular,
-  StarFilled24Regular,
+  Star24Filled,
   Edit24Regular,
   Delete24Regular,
   ChevronDown24Regular,
@@ -318,7 +318,7 @@ function CustomerCard({
               </Text>
               {customer.isFavorite && (
                 <Tooltip content="Pelanggan favorit" relationship="label">
-                  <StarFilled24Regular className="w-4 h-4 text-yellow-500" />
+                  <Star24Filled className="w-4 h-4 text-yellow-500" />
                 </Tooltip>
               )}
             </div>
@@ -348,7 +348,7 @@ function CustomerCard({
               <MenuPopover>
                 <MenuList>
                   <MenuItem
-                    icon={customer.isFavorite ? <StarFilled24Regular /> : <Star24Regular />}
+                    icon={customer.isFavorite ? <Star24Filled /> : <Star24Regular />}
                     onClick={handleToggleFavorite}
                   >
                     {customer.isFavorite ? 'Hapus dari Favorit' : 'Tambah ke Favorit'}
@@ -490,7 +490,8 @@ function CustomerForm({ customer, onSave, onCancel, isLoading = false }: Custome
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <>
+      <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Name */}
         <Field 
@@ -554,7 +555,6 @@ function CustomerForm({ customer, onSave, onCancel, isLoading = false }: Custome
               onChange={(e) => handleChange('taxId', e.target.value)}
               placeholder="01.234.567.8-901.000"
             />
-          </Input>
         </Field>
         )}
         
@@ -612,10 +612,11 @@ function CustomerForm({ customer, onSave, onCancel, isLoading = false }: Custome
           disabled={isLoading}
           icon={isLoading ? <Spinner size="tiny" /> : undefined}
         >
-          {isLoading ? 'Menyimpan...' : customer ? 'Update' : 'Simpan'}
+          {isLoading ? 'Menyimpan...' : (customer ? 'Update' : 'Simpan')}
         </Button>
       </div>
-    </form>
+      </form>
+    </>
   );
 }
 
@@ -882,12 +883,12 @@ export default function CustomerSelector({
                         <div className="space-y-2">
                           <Checkbox
                             checked={filters.favorites}
-                            onChange={(_, data) => setFilters(prev => ({ ...prev, favorites: data.checked }))}
+                            onChange={(_, data) => setFilters(prev => ({ ...prev, favorites: !!data.checked }))}
                             label="Hanya Favorit"
                           />
                           <Checkbox
                             checked={filters.active}
-                            onChange={(_, data) => setFilters(prev => ({ ...prev, active: data.checked }))}
+                            onChange={(_, data) => setFilters(prev => ({ ...prev, active: !!data.checked }))}
                             label="Hanya Aktif"
                           />
                         </div>
@@ -954,7 +955,7 @@ export default function CustomerSelector({
                       key={customer.id}
                       appearance="outline"
                       size="small"
-                      icon={<StarFilled24Regular />}
+                      icon={<Star24Filled />}
                       onClick={() => handleCustomerSelect(customer)}
                     >
                       {customer.name}

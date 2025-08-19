@@ -42,7 +42,7 @@ import {
 } from '@fluentui/react-icons';
 import { useAuth } from '@/lib/auth/use-auth';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { MainLayout } from '@/app/components/layout/MainLayout';
+import { MainLayout } from '@/components/layout/main-layout';
 import { useKeyboard } from '@/lib/keyboard/keyboard-provider';
 import { formatCurrency } from '@/lib/utils/format';
 import toast from 'react-hot-toast';
@@ -180,8 +180,8 @@ const mockProducts: Product[] = [
 
 const columnHelper = createColumnHelper<Product>();
 
-const productColumns: ColumnDef<Product>[] = [
-  columnHelper.accessor('name', {
+const productColumns: ColumnDef<Product, any>[] = [
+  columnHelper.accessor((row) => row.name, {
     id: 'product',
     header: 'Produk',
     cell: ({ row }) => {
@@ -202,7 +202,7 @@ const productColumns: ColumnDef<Product>[] = [
     },
     enableSorting: true
   }),
-  columnHelper.accessor('category_name', {
+  columnHelper.accessor((row) => row.category_name, {
     id: 'category',
     header: 'Kategori',
     cell: ({ getValue }) => (
@@ -213,7 +213,7 @@ const productColumns: ColumnDef<Product>[] = [
     ),
     enableSorting: true
   }),
-  columnHelper.accessor('selling_price', {
+  columnHelper.accessor((row) => row.selling_price, {
     id: 'pricing',
     header: 'Harga & Margin',
     cell: ({ row }) => {
@@ -227,7 +227,7 @@ const productColumns: ColumnDef<Product>[] = [
     },
     enableSorting: true
   }),
-  columnHelper.accessor('current_stock', {
+  columnHelper.accessor((row) => row.current_stock, {
     id: 'stock',
     header: 'Stok',
     cell: ({ row }) => {
@@ -250,7 +250,7 @@ const productColumns: ColumnDef<Product>[] = [
     },
     enableSorting: true
   }),
-  columnHelper.accessor('is_active', {
+  columnHelper.accessor((row) => row.is_active, {
     id: 'status',
     header: 'Status',
     cell: ({ getValue }) => (

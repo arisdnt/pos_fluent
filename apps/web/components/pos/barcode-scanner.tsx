@@ -27,7 +27,7 @@ import {
   ProgressBar
 } from '@fluentui/react-components';
 import {
-  Barcode24Regular,
+  Code24Regular,
   Camera24Regular,
   CameraOff24Regular,
   Search24Regular,
@@ -221,7 +221,7 @@ function ProductPreview({ product, quantity, onQuantityChange, onAddToCart }: Pr
       <div className="space-y-3">
         <div className="flex items-start space-x-3">
           <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-            <Barcode24Regular className="w-8 h-8 text-gray-400" />
+            <Code24Regular className="w-8 h-8 text-gray-400" />
           </div>
           <div className="flex-1 min-w-0">
             <Text weight="semibold" className="block">
@@ -264,7 +264,7 @@ function ProductPreview({ product, quantity, onQuantityChange, onAddToCart }: Pr
               type="number"
               min="1"
               max={product.stock}
-              value={quantity}
+              value={quantity.toString()}
               onChange={(e) => onQuantityChange(Math.max(1, parseInt(e.target.value) || 1))}
               size="large"
             />
@@ -620,7 +620,7 @@ export default function BarcodeScanner({
         <DialogBody className="flex flex-col h-full">
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Barcode24Regular />
+              <Code24Regular />
               <Text className="text-xl font-semibold">Scanner Barcode</Text>
             </div>
             <Badge appearance="outline">

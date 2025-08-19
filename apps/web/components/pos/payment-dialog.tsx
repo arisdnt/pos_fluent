@@ -29,8 +29,8 @@ import {
 } from '@fluentui/react-components';
 import {
   Money24Regular,
-  CreditCard24Regular,
-  Barcode24Regular,
+  Payment24Regular,
+  Code24Regular,
   Calculator24Regular,
   Receipt24Regular,
   Print24Regular,
@@ -100,7 +100,7 @@ const paymentMethods: PaymentMethod[] = [
     id: 'debit',
     name: 'Kartu Debit',
     type: 'card',
-    icon: <CreditCard24Regular />,
+    icon: <Payment24Regular />,
     enabled: true,
     requiresAmount: false
   },
@@ -108,7 +108,7 @@ const paymentMethods: PaymentMethod[] = [
     id: 'credit',
     name: 'Kartu Kredit',
     type: 'card',
-    icon: <CreditCard24Regular />,
+    icon: <Payment24Regular />,
     enabled: true,
     requiresAmount: false,
     fee: 2.5,
@@ -118,7 +118,7 @@ const paymentMethods: PaymentMethod[] = [
     id: 'qris',
     name: 'QRIS',
     type: 'qris',
-    icon: <Barcode24Regular />,
+    icon: <Code24Regular />,
     enabled: true,
     requiresAmount: false
   },
@@ -126,7 +126,7 @@ const paymentMethods: PaymentMethod[] = [
     id: 'transfer',
     name: 'Transfer Bank',
     type: 'transfer',
-    icon: <CreditCard24Regular />,
+    icon: <Payment24Regular />,
     enabled: true,
     requiresAmount: false
   },
@@ -610,7 +610,7 @@ export default function PaymentDialog({
               <Input
                 type="number"
                 placeholder="0"
-                value={currentAmount || ''}
+                value={currentAmount ? currentAmount.toString() : ''}
                 onChange={(e) => setCurrentAmount(Number(e.target.value))}
                 contentBefore={<Text>Rp</Text>}
                 size="large"

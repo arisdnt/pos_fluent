@@ -115,10 +115,10 @@ const useStyles = makeStyles({
     height: '150px',
     borderRadius: '50%',
     background: `conic-gradient(
-      ${tokens.colorPaletteBlueForeground1} 0deg 120deg,
-      ${tokens.colorPaletteGreenForeground1} 120deg 240deg,
-      ${tokens.colorPaletteYellowForeground1} 240deg 300deg,
-      ${tokens.colorPaletteRedForeground1} 300deg 360deg
+      ${tokens.colorPaletteBlueForeground2} 0deg 120deg,
+      ${tokens.colorPaletteGreenForeground2} 120deg 240deg,
+      ${tokens.colorPaletteYellowForeground2} 240deg 300deg,
+      ${tokens.colorPaletteRedForeground2} 300deg 360deg
     )`
   },
   lineChart: {
@@ -219,14 +219,14 @@ const calculatePercentageChange = (current: number, previous: number): number =>
 };
 
 const getColorPalette = (): string[] => [
-  tokens.colorPaletteBlueForeground1,
-  tokens.colorPaletteGreenForeground1,
-  tokens.colorPaletteYellowForeground1,
-  tokens.colorPaletteRedForeground1,
-  tokens.colorPalettePurpleForeground1,
-  tokens.colorPaletteTealForeground1,
-  tokens.colorPaletteOrangeForeground1,
-  tokens.colorPalettePinkForeground1
+  tokens.colorPaletteBlueForeground2,
+  tokens.colorPaletteGreenForeground2,
+  tokens.colorPaletteYellowForeground2,
+  tokens.colorPaletteRedForeground2,
+  tokens.colorPalettePurpleForeground2,
+  tokens.colorPaletteTealForeground2,
+  tokens.colorPaletteDarkOrangeForeground2,
+  tokens.colorPalettePinkForeground2
 ];
 
 // ======================================================================

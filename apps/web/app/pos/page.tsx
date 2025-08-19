@@ -59,7 +59,7 @@ import { useAuth } from '@/lib/auth/use-auth';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { formatCurrency, formatDateTime } from '@/lib/utils/format';
 import { cn } from '@/lib/utils/cn';
-import { MainLayout } from '@/app/components/layout/MainLayout';
+import { MainLayout } from '@/components/layout/main-layout';
 import { useKeyboard } from '@/lib/keyboard/keyboard-provider';
 import toast from 'react-hot-toast';
 
@@ -863,7 +863,7 @@ function POSPageContent() {
                   <Button
                     appearance="outline"
                     icon={<Save24Regular />}
-                    onClick={() => toast.info('Fitur hold transaksi akan segera tersedia')}
+                    onClick={() => toast('Fitur hold transaksi akan segera tersedia')}
                   >
                     Hold
                   </Button>
@@ -905,10 +905,12 @@ function POSPageContent() {
                       key={method.id}
                       appearance={selectedPaymentMethod.id === method.id ? "primary" : "outline"}
                       className="justify-start"
-                      icon={method.icon}
                       onClick={() => setSelectedPaymentMethod(method)}
                     >
-                      {method.name}
+                      <div className="flex items-center gap-2">
+                        {method.icon}
+                        {method.name}
+                      </div>
                     </Button>
                   ))}
                 </div>
@@ -920,7 +922,7 @@ function POSPageContent() {
                 <Input
                   type="number"
                   placeholder="0"
-                  value={amountPaid || ''}
+                  value={amountPaid ? amountPaid.toString() : ''}
                   onChange={(e) => setAmountPaid(Number(e.target.value))}
                   contentBefore={<Text>Rp</Text>}
                 />
@@ -1135,41 +1137,9 @@ function POSPageContent() {
 // ======================================================================
 
 export default function POSPage() {
-  const router = useRouter();
-
-  const handleNavigation = (path: string) => {
-    router.push(path);
-  };
-
-  const handleLogout = () => {
-    router.push('/login');
-  };
-
-  const handleThemeToggle = () => {
-    console.log('Theme toggle clicked');
-  };
-
   return (
     <ProtectedRoute requiredPermissions={['pos.create', 'pos.read']}>
-      <MainLayout
-        user={{
-          id: 'user1',
-          name: 'Admin Kasir',
-          email: 'admin@kasir.com',
-          role: 'Kasir'
-        }}
-        shift={{
-          id: 'shift1',
-          number: 'SH-001',
-          startTime: new Date(),
-          cashier: 'Admin Kasir',
-          status: 'active'
-        }}
-        onNavigate={handleNavigation}
-        onLogout={handleLogout}
-        onThemeToggle={handleThemeToggle}
-        isDarkMode={false}
-      >
+      <MainLayout>
         <POSPageContent />
       </MainLayout>
     </ProtectedRoute>

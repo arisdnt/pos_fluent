@@ -13,6 +13,7 @@ import {
   Badge,
   Button,
   Input,
+  Textarea,
   Field,
   Dropdown,
   Option,

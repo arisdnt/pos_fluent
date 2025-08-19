@@ -517,7 +517,7 @@ function TestingPageContent() {
 
 export default function TestingPage() {
   return (
-    <ProtectedRoute requiredRole="admin">
+    <ProtectedRoute requiredRoles={["admin"]}>
       <TestingPageContent />
     </ProtectedRoute>
   );

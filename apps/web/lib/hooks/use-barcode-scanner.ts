@@ -99,9 +99,9 @@ export function useBarcodeScanner(callbacks?: BarcodeScannerCallbacks) {
       enableVibration: true,
       enableFlash: false,
       scanDelay: 1000,
-      formats: ['code128', 'ean13', 'ean8', 'qr'],
-      continuous: true,
-      preferredCamera: 'environment'
+      autoFocus: true,
+      preferredCamera: 'back',
+      scanFormats: ['CODE_128', 'EAN_13', 'EAN_8', 'QR_CODE']
     },
     isLoading: false,
     error: null,
@@ -154,16 +154,19 @@ export function useBarcodeScanner(callbacks?: BarcodeScannerCallbacks) {
       setStatus('initializing');
       clearError();
 
-      // Request camera permission
-      const hasPermission = await barcodeService.requestCameraPermission();
-      if (!hasPermission) {
+      // Initialize barcode service (handles permission and camera detection)
+      await barcodeService.initialize();
+      
+      // Get scanner state
+      const scannerState = barcodeService.getState();
+      if (!scannerState.hasPermission) {
         setError('Izin kamera diperlukan untuk memindai barcode');
         setStatus('error');
         return false;
       }
 
       // Get available cameras
-      const cameras = await barcodeService.getCameras();
+      const cameras = scannerState.availableCameras;
       if (cameras.length === 0) {
         setError('Tidak ada kamera yang tersedia');
         setStatus('error');
@@ -172,7 +175,7 @@ export function useBarcodeScanner(callbacks?: BarcodeScannerCallbacks) {
 
       // Select default camera
       const preferredCamera = cameras.find(cam => 
-        cam.facingMode === state.settings.preferredCamera
+        cam.facing === state.settings.preferredCamera
       ) || cameras[0];
 
       updateState({
@@ -232,21 +235,21 @@ export function useBarcodeScanner(callbacks?: BarcodeScannerCallbacks) {
       // Update scanner settings
       await barcodeService.updateSettings(state.settings);
 
-      // Start scanning
-      const success = await barcodeService.startScanning(
-        state.selectedCamera.deviceId,
-        state.videoElement
-      );
-
-      if (success) {
-        updateState({ isScanning: true });
-        setStatus('scanning');
-        return true;
-      } else {
-        setError('Gagal memulai pemindaian');
+      // Check if video element is available
+      if (!state.videoElement) {
+        setError('Video element tidak tersedia');
         setStatus('error');
         return false;
       }
+
+      // Start scanning
+      await barcodeService.startScanning(
+        state.videoElement
+      );
+
+      updateState({ isScanning: true });
+       setStatus('scanning');
+       return true;
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Gagal memulai pemindaian';
@@ -297,20 +300,15 @@ export function useBarcodeScanner(callbacks?: BarcodeScannerCallbacks) {
       }
 
       // Switch camera
-      const success = await barcodeService.switchCamera(cameraId);
-      if (success) {
-        updateState({ selectedCamera: camera });
-        
-        // Restart scanning if it was active
-        if (wasScanning) {
-          await startScanning();
-        }
-        
-        return true;
-      } else {
-        setError('Gagal beralih kamera');
-        return false;
+      await barcodeService.switchCamera(cameraId);
+      updateState({ selectedCamera: camera });
+      
+      // Restart scanning if it was active
+      if (wasScanning) {
+        await startScanning();
       }
+      
+      return true;
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Gagal beralih kamera';
@@ -324,17 +322,12 @@ export function useBarcodeScanner(callbacks?: BarcodeScannerCallbacks) {
   const toggleFlash = useCallback(async (): Promise<boolean> => {
     try {
       const newFlashState = !state.settings.enableFlash;
-      const success = await barcodeService.toggleFlash();
+      await barcodeService.toggleFlash();
       
-      if (success) {
-        updateState({
-          settings: { ...state.settings, enableFlash: newFlashState }
-        });
-        return true;
-      } else {
-        setError('Gagal mengubah flash');
-        return false;
-      }
+      updateState({
+        settings: { ...state.settings, enableFlash: newFlashState }
+      });
+      return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Gagal mengubah flash';
       setError(errorMessage);
@@ -361,12 +354,11 @@ export function useBarcodeScanner(callbacks?: BarcodeScannerCallbacks) {
   // ======================================================================
 
   const clearHistory = useCallback(() => {
-    barcodeService.clearHistory();
+    barcodeService.clearScanHistory();
     updateState({ scanHistory: [] });
   }, [updateState]);
 
   const removeFromHistory = useCallback((id: string) => {
-    barcodeService.removeFromHistory(id);
     const updatedHistory = state.scanHistory.filter(item => item.id !== id);
     updateState({ scanHistory: updatedHistory });
   }, [state.scanHistory, updateState]);
@@ -384,9 +376,9 @@ export function useBarcodeScanner(callbacks?: BarcodeScannerCallbacks) {
   // ======================================================================
 
   const handleScanResult = useCallback((result: BarcodeResult) => {
-    updateState({ 
+    updateState({
       lastResult: result,
-      scanHistory: barcodeService.getHistory()
+      scanHistory: barcodeService.getScanHistory()
     });
     
     if (callbacksRef.current?.onScan) {

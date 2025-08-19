@@ -553,7 +553,7 @@ export default function ShiftManagement({
   
   const expectedClosingCash = hasActiveShift ? 
     (shift.openingCash + 
-     shift.paymentMethods.find(pm => pm.type === 'cash')?.amount || 0 - 
+     (shift.paymentMethods.find(pm => pm.type === 'cash')?.amount || 0) - 
      shift.totalRefunds) : 0;
   
   const closingCash = closingDenominations.reduce((sum, denom) => sum + denom.total, 0);

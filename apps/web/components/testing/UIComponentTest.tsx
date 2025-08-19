@@ -23,7 +23,7 @@ import {
   Switch,
   Slider,
   SpinButton,
-  TextArea,
+  Textarea,
   Badge,
   Avatar,
   Spinner,
@@ -319,10 +319,10 @@ export function UIComponentTest() {
       
       <div className={styles.formGroup}>
         <Label htmlFor="textarea1">Text Area</Label>
-        <TextArea
-          id="textarea1"
-          value={textAreaValue}
-          onChange={(e) => setTextAreaValue(e.target.value)}
+        <Textarea
+                  id="textarea1"
+                  value={textAreaValue}
+                  onChange={(e) => setTextAreaValue(e.target.value)}
           placeholder="Masukkan teks panjang..."
           rows={4}
         />

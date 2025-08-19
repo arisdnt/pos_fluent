@@ -187,6 +187,11 @@ function sortBranches(branches: Branch[], sortBy: string, sortOrder: string): Br
     let aValue = a[sortBy as keyof Branch];
     let bValue = b[sortBy as keyof Branch];
 
+    // Handle undefined values
+    if (aValue === undefined && bValue === undefined) return 0;
+    if (aValue === undefined) return sortOrder === 'asc' ? 1 : -1;
+    if (bValue === undefined) return sortOrder === 'asc' ? -1 : 1;
+
     if (typeof aValue === 'string') {
       aValue = aValue.toLowerCase();
       bValue = (bValue as string).toLowerCase();

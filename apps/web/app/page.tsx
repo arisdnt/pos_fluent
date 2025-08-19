@@ -25,16 +25,16 @@ import {
   ProgressBar
 } from '@fluentui/react-components';
 import {
-  ShoppingCart24Regular,
+  Cart24Regular,
   Box24Regular,
   People24Regular,
   DocumentText24Regular,
   Settings24Regular,
-  ChartLine24Regular,
-  Store24Regular,
+  ChartMultiple24Regular,
+  Building24Regular,
   Receipt24Regular,
-  Scanner24Regular,
-  CashDrawer24Regular,
+  Scan24Regular,
+  Money24Regular,
   ArrowRight24Regular,
   CheckmarkCircle24Filled,
   Warning24Filled,
@@ -179,7 +179,7 @@ export default function HomePage() {
       id: 'pos',
       title: 'Kasir (POS)',
       description: 'Mulai transaksi penjualan baru',
-      icon: <ShoppingCart24Regular />,
+      icon: <Cart24Regular />,
       href: '/pos',
       color: 'brand',
       shortcut: 'F3'
@@ -251,7 +251,7 @@ export default function HomePage() {
           <CardHeader
             header={
               <div className="text-center space-y-2">
-                <Store24Regular className="w-12 h-12 mx-auto text-blue-600" />
+                <Building24Regular className="w-12 h-12 mx-auto text-blue-600" />
                 <Title2>POS Kasir Suite</Title2>
                 <Body1 className="text-gray-600">
                   Aplikasi Point of Sale untuk Kasir Indonesia
@@ -291,16 +291,16 @@ export default function HomePage() {
           <div>
             <Title1>Dashboard Kasir</Title1>
             <Body1 className="text-gray-600 mt-1">
-              Selamat datang, {user.name}! Hari ini {formatDateTime(currentTime, 'EEEE, dd MMMM yyyy')}
+              Selamat datang, {user.full_name}! Hari ini {formatDateTime(currentTime, 'long')}
             </Body1>
           </div>
           <div className="flex items-center space-x-4">
             <div className="text-right">
               <Caption1 className="text-gray-500">Waktu Sekarang</Caption1>
-              <Text weight="semibold">{formatDateTime(currentTime, 'HH:mm:ss')}</Text>
+              <Text weight="semibold">{formatDateTime(currentTime, 'short')}</Text>
             </div>
             <Avatar 
-              name={user.name}
+              name={user.full_name}
               size={40}
               color="brand"
             />
@@ -332,7 +332,7 @@ export default function HomePage() {
               <Button 
                 appearance="primary" 
                 size="large"
-                icon={<ShoppingCart24Regular />}
+                icon={<Cart24Regular />}
                 iconPosition="before"
                 onClick={handleStartPOS}
               >
@@ -348,7 +348,7 @@ export default function HomePage() {
             <Card className="bg-blue-50 border-blue-200">
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <ChartLine24Regular className="text-blue-600" />
+                  <ChartMultiple24Regular className="text-blue-600" />
                   <Badge appearance="filled" color="brand">Hari Ini</Badge>
                 </div>
                 <Title3 className="text-blue-900">{formatCurrency(stats.todaySales)}</Title3>
@@ -371,7 +371,7 @@ export default function HomePage() {
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <People24Regular className="text-purple-600" />
-                  <Badge appearance="filled" color="info">Pelanggan</Badge>
+                  <Badge appearance="filled" color="informative">Pelanggan</Badge>
                 </div>
                 <Title3 className="text-purple-900">{stats.todayCustomers}</Title3>
                 <Caption1 className="text-purple-700">Pelanggan Hari Ini</Caption1>
@@ -403,7 +403,7 @@ export default function HomePage() {
             <Card className="bg-indigo-50 border-indigo-200">
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <CashDrawer24Regular className="text-indigo-600" />
+                  <Money24Regular className="text-indigo-600" />
                   <Badge appearance="filled" color="brand">Sesi</Badge>
                 </div>
                 <Title3 className="text-indigo-900">{stats.openSessions}</Title3>
@@ -490,7 +490,7 @@ export default function HomePage() {
                           <Text weight="semibold" className="block">{activity.title}</Text>
                           <Caption1 className="text-gray-600 block">{activity.description}</Caption1>
                           <Caption1 className="text-gray-500 block mt-1">
-                            {formatDateTime(activity.timestamp, 'HH:mm')}
+                            {formatDateTime(activity.timestamp, 'short')}
                           </Caption1>
                         </div>
                       </div>

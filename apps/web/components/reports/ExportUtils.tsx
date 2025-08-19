@@ -100,7 +100,7 @@ interface ExportDialogProps {
   reportData: any[];
   summary?: any;
   onExport: (options: ExportOptions) => Promise<void>;
-  children: React.ReactNode;
+  children: React.ReactElement;
 }
 
 interface ExportButtonProps {

@@ -8,32 +8,33 @@
 // ======================================================================
 
 // Products API
-export * from './products/route';
-export * from './products/[id]/route';
+// Note: Commented out to avoid export conflicts
+// export * from './products/route';
+// export * from './products/[id]/route';
 
 // Categories API
-export * from './categories/route';
-export * from './categories/[id]/route';
+// export * from './categories/route';
+// export * from './categories/[id]/route';
 
 // Transactions API
-export * from './transactions/route';
-export * from './transactions/[id]/route';
-export * from './transactions/[id]/refund/route';
-export * from './transactions/[id]/void/route';
+// export * from './transactions/route';
+// export * from './transactions/[id]/route';
+// export * from './transactions/[id]/refund/route';
+// export * from './transactions/[id]/void/route';
 
 // Customers API
-export * from './customers/route';
-export * from './customers/[id]/route';
-export * from './customers/[id]/points/route';
+// export * from './customers/route';
+// export * from './customers/[id]/route';
+// export * from './customers/[id]/points/route';
 
 // Reports API
-export * from './reports/route';
-export * from './reports/export/route';
+// export * from './reports/route';
+// export * from './reports/export/route';
 
 // Shifts API
-export * from './shifts/route';
-export * from './shifts/[id]/route';
-export * from './shifts/[id]/cash-drawer/route';
+// export * from './shifts/route';
+// export * from './shifts/[id]/route';
+// export * from './shifts/[id]/cash-drawer/route';
 
 // ======================================================================
 // COMMON API TYPES

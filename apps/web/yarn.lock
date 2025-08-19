@@ -2146,6 +2146,11 @@ drizzle-orm@^0.29.0:
   resolved "https://registry.npmjs.org/drizzle-orm/-/drizzle-orm-0.29.5.tgz"
   integrity sha512-jS3+uyzTz4P0Y2CICx8FmRQ1eplURPaIMWDn/yq6k4ShRFj9V7vlJk67lSf2kyYPzQ60GkkNGXcJcwrxZ6QCRw==
 
+drizzle-zod@^0.5.1:
+  version "0.5.1"
+  resolved "https://registry.npmjs.org/drizzle-zod/-/drizzle-zod-0.5.1.tgz"
+  integrity sha512-C/8bvzUH/zSnVfwdSibOgFjLhtDtbKYmkbPbUCq46QZyZCH6kODIMSOgZ8R7rVjoI+tCj3k06MRJMDqsIeoS4A==
+
 dunder-proto@^1.0.0, dunder-proto@^1.0.1:
   version "1.0.1"
   resolved "https://registry.npmjs.org/dunder-proto/-/dunder-proto-1.0.1.tgz"

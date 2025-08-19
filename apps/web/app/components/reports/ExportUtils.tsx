@@ -211,7 +211,7 @@ export function ExportDialog({ reportType, reportData, summary, onExport, childr
   return (
     <Dialog open={isOpen} onOpenChange={(_, data) => setIsOpen(data.open)}>
       <DialogTrigger disableButtonEnhancement>
-        {children}
+        <span>{children}</span>
       </DialogTrigger>
       <DialogSurface>
         <DialogTitle>

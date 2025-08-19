@@ -3,12 +3,28 @@
 // Export semua custom hooks untuk aplikasi POS
 // ======================================================================
 
+import { 
+  useState, 
+  useEffect, 
+  useCallback, 
+  useMemo, 
+  useRef, 
+  useContext, 
+  useReducer,
+  useLayoutEffect,
+  useImperativeHandle,
+  useDeferredValue,
+  useTransition,
+  useId,
+  type RefObject, 
+  type MutableRefObject 
+} from 'react';
+
 // POS Core Hook
 export { usePOS } from './use-pos';
 export type { 
   POSState, 
   POSActions, 
-  POSCallbacks,
   UsePOSReturn 
 } from './use-pos';
 
@@ -127,12 +143,12 @@ export function useThrottle<T>(value: T, limit: number): T {
 
 // Hook untuk previous value
 export function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T>();
-  
+  const ref = useRef<T | undefined>(undefined);
+
   useEffect(() => {
     ref.current = value;
   });
-  
+
   return ref.current;
 }
 
@@ -199,7 +215,7 @@ export function useKeyboardShortcut(
     if (!enabled) return;
 
     const handleKeyPress = (event: KeyboardEvent) => {
-      const pressedKeys = [];
+      const pressedKeys: string[] = [];
       
       if (event.ctrlKey) pressedKeys.push('ctrl');
       if (event.altKey) pressedKeys.push('alt');
@@ -321,6 +337,6 @@ export {
   useDeferredValue,
   useTransition,
   useId
-} from 'react';
+};
 
-export type { RefObject, MutableRefObject } from 'react';
+export type { RefObject, MutableRefObject };

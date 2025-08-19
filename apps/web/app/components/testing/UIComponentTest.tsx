@@ -67,7 +67,7 @@ import {
 import {
   Play24Regular,
   Stop24Regular,
-  Refresh24Regular,
+  ArrowClockwise24Regular,
   Settings24Regular,
   Warning24Regular,
   Checkmark24Regular,

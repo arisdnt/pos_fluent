@@ -1,57 +1,15 @@
-// ======================================================================
-// DRIZZLE CONFIGURATION
-// Konfigurasi untuk Drizzle Kit - Database Migration Tool
-// ======================================================================
-
 import type { Config } from 'drizzle-kit';
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
-  // Database connection
-  dialect: 'postgresql',
-  dbCredentials: {
-    url: process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/pos_kasir'
-  },
-  
-  // Schema configuration
   schema: './lib/db/schema.ts',
   out: './drizzle',
-  
-  // Migration settings
-  migrations: {
-    prefix: 'timestamp',
-    table: '__drizzle_migrations__',
-    schema: 'public'
+  driver: 'pg',
+  dbCredentials: {
+    connectionString: process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/pos_kasir'
   },
-  
-  // Introspection settings
-  introspect: {
-    casing: 'camel'
-  },
-  
-  // Push settings
-  push: {
-    strict: true
-  },
-  
-  // Studio settings
-  studio: {
-    port: 4983,
-    host: '127.0.0.1',
-    verbose: true
-  },
-  
-  // Verbose logging
   verbose: true,
-  
-  // Strict mode
-  strict: true,
-  
-  // Custom type mappings untuk PostgreSQL
-  schemaFilter: ['public'],
-  
-  // Breakpoints untuk debugging
-  breakpoints: true
+  strict: true
 }) satisfies Config;
 
 // ======================================================================

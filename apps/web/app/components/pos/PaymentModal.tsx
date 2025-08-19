@@ -30,14 +30,14 @@ import {
 } from '@fluentui/react-components';
 import {
   Money20Regular,
-  CreditCard20Regular,
+  CreditCardClock20Regular,
   Wallet20Regular,
   Receipt20Regular,
   Calculator20Regular,
   Print20Regular,
   Checkmark20Regular,
   Warning20Regular,
-  Error20Regular,
+  ErrorCircle20Regular,
   ArrowLeft20Regular,
   Add20Regular
 } from '@fluentui/react-icons';
@@ -94,14 +94,9 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     alignItems: 'center',
     gap: '8px',
-    transition: 'all 0.2s ease',
-    '&:hover': {
-      backgroundColor: tokens.colorNeutralBackground1Hover,
-      borderColor: tokens.colorNeutralStroke1Hover
-    }
+    transition: 'all 0.2s ease'
   },
   paymentMethodActive: {
-    borderColor: tokens.colorBrandStroke1,
     backgroundColor: tokens.colorBrandBackground2
   },
   paymentDetails: {
@@ -238,14 +233,14 @@ const paymentMethods: PaymentMethod[] = [
   {
     id: 'debit',
     name: 'Kartu Debit',
-    icon: <CreditCard20Regular />,
+    icon: <CreditCardClock20Regular />,
     type: 'card',
     enabled: true
   },
   {
     id: 'credit',
     name: 'Kartu Kredit',
-    icon: <CreditCard20Regular />,
+    icon: <CreditCardClock20Regular />,
     type: 'card',
     enabled: true
   },
@@ -683,7 +678,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         alignItems: 'center',
         justifyContent: 'center'
       }}>
-        <Error20Regular style={{ 
+        <ErrorCircle20Regular style={{ 
           fontSize: '32px', 
           color: tokens.colorPaletteRedForeground2 
         }} />

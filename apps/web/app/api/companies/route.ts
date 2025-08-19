@@ -202,9 +202,14 @@ function sortCompanies(companies: Company[], sortBy: string, sortOrder: string):
     let aValue = a[sortBy as keyof Company];
     let bValue = b[sortBy as keyof Company];
 
-    if (typeof aValue === 'string') {
+    // Handle undefined values
+    if (aValue === undefined && bValue === undefined) return 0;
+    if (aValue === undefined) return sortOrder === 'asc' ? 1 : -1;
+    if (bValue === undefined) return sortOrder === 'asc' ? -1 : 1;
+
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
       aValue = aValue.toLowerCase();
-      bValue = (bValue as string).toLowerCase();
+      bValue = bValue.toLowerCase();
     }
 
     if (aValue < bValue) {

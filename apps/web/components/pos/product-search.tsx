@@ -37,7 +37,7 @@ import {
   Filter24Regular,
   ShoppingBag24Regular,
   Add24Regular,
-  Barcode24Regular,
+  Code24Regular,
   Tag24Regular,
   Building24Regular,
   Box24Regular,
@@ -375,7 +375,7 @@ function ProductCard({
             type="number"
             min="1"
             max={product.stock}
-            value={quantity}
+            value={quantity.toString()}
             onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
             className="w-16"
             size="small"

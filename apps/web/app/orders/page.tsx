@@ -57,7 +57,7 @@ import {
   ProgressBar
 } from '@fluentui/react-components';
 import {
-  ShoppingCart24Regular,
+  Cart24Regular,
   Add24Regular,
   Search24Regular,
   Filter24Regular,
@@ -69,8 +69,8 @@ import {
   CheckmarkCircle24Regular,
   Clock24Regular,
   Dismiss24Regular,
-  Package24Regular,
-  Truck24Regular,
+  Box24Regular,
+  CaretRight24Regular,
   Person24Regular,
   Phone24Regular,
   Location24Regular,
@@ -254,8 +254,8 @@ const getStatusBadge = (status: Order['status']) => {
   const statusConfig = {
     pending: { color: 'warning' as const, icon: <Clock24Regular />, text: 'Menunggu' },
     confirmed: { color: 'success' as const, icon: <CheckmarkCircle24Regular />, text: 'Dikonfirmasi' },
-    processing: { color: 'informative' as const, icon: <Package24Regular />, text: 'Diproses' },
-    shipped: { color: 'informative' as const, icon: <Truck24Regular />, text: 'Dikirim' },
+    processing: { color: 'informative' as const, icon: <Box24Regular />, text: 'Diproses' },
+    shipped: { color: 'informative' as const, icon: <CaretRight24Regular />, text: 'Dikirim' },
     delivered: { color: 'success' as const, icon: <CheckmarkCircle24Regular />, text: 'Selesai' },
     cancelled: { color: 'danger' as const, icon: <Dismiss24Regular />, text: 'Dibatalkan' }
   };
@@ -733,7 +733,7 @@ function OrdersPageContent() {
         <Card className="p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <ShoppingCart24Regular className="text-blue-600" />
+              <Cart24Regular className="text-blue-600" />
             </div>
             <div>
               <Text size={200} className="text-gray-600">Total Pesanan</Text>
@@ -775,7 +775,7 @@ function OrdersPageContent() {
         <Card className="p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-purple-100 rounded-lg">
-              <Truck24Regular className="text-purple-600" />
+              <CaretRight24Regular className="text-purple-600" />
             </div>
             <div>
               <Text size={200} className="text-gray-600">Dikirim</Text>

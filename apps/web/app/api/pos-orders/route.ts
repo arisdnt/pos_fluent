@@ -397,9 +397,14 @@ function sortOrders(orders: PosOrder[], sortBy: string, sortOrder: string): PosO
     let aValue = a[sortBy as keyof PosOrder];
     let bValue = b[sortBy as keyof PosOrder];
 
-    if (typeof aValue === 'string') {
+    // Handle undefined values
+    if (aValue === undefined && bValue === undefined) return 0;
+    if (aValue === undefined) return sortOrder === 'asc' ? 1 : -1;
+    if (bValue === undefined) return sortOrder === 'asc' ? -1 : 1;
+
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
       aValue = aValue.toLowerCase();
-      bValue = (bValue as string).toLowerCase();
+      bValue = bValue.toLowerCase();
     }
 
     if (aValue < bValue) {
@@ -702,7 +707,7 @@ export async function PUT(request: NextRequest) {
     }
 
     updatedOrder.updatedAt = new Date();
-    mockOrders[orderIndex] = updatedOrder;
+    mockOrders[orderIndex] = updatedOrder as PosOrder;
 
     return NextResponse.json({
       success: true,

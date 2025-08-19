@@ -27,7 +27,7 @@ import {
   SpinButton
 } from '@fluentui/react-components';
 import {
-  ShoppingCart20Regular,
+  ShoppingBag20Regular,
   Delete20Regular,
   Add20Regular,
   Subtract20Regular,
@@ -35,7 +35,7 @@ import {
   Person20Regular,
   Tag20Regular,
   Calculator20Regular,
-  Clear20Regular,
+  Dismiss20Regular,
   Save20Regular
 } from '@fluentui/react-icons';
 
@@ -90,11 +90,7 @@ const useStyles = makeStyles({
     display: 'flex',
     gap: '12px',
     alignItems: 'flex-start',
-    transition: 'all 0.2s ease',
-    '&:hover': {
-      backgroundColor: tokens.colorNeutralBackground1Hover,
-      borderColor: tokens.colorNeutralStroke1Hover
-    }
+    transition: 'all 0.2s ease'
   },
   itemImage: {
     width: '48px',
@@ -326,7 +322,7 @@ export const ShoppingCart: React.FC<ShoppingCartProps> = ({
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerTitle}>
-          <ShoppingCart20Regular />
+          <ShoppingBag20Regular />
           <Text size={500} weight="semibold">
             Keranjang Belanja
           </Text>
@@ -340,7 +336,7 @@ export const ShoppingCart: React.FC<ShoppingCartProps> = ({
           <Tooltip content="Kosongkan Keranjang" relationship="label">
             <Button
               appearance="subtle"
-              icon={<Clear20Regular />}
+              icon={<Dismiss20Regular />}
               onClick={() => setClearDialogOpen(true)}
               size="small"
             />
@@ -352,7 +348,7 @@ export const ShoppingCart: React.FC<ShoppingCartProps> = ({
       <div className={styles.itemsList}>
         {items.length === 0 ? (
           <div className={styles.emptyState}>
-            <ShoppingCart20Regular style={{ fontSize: '48px' }} />
+            <ShoppingBag20Regular style={{ fontSize: '48px' }} />
             <Text size={400} weight="semibold">
               Keranjang Kosong
             </Text>
@@ -409,7 +405,7 @@ export const ShoppingCart: React.FC<ShoppingCartProps> = ({
                     max={999}
                     step={1}
                     onChange={(_, data) => {
-                      if (data.value !== undefined) {
+                      if (data.value !== undefined && data.value !== null) {
                         handleQuantityChange(item.id, data.value);
                       }
                     }}
@@ -636,7 +632,7 @@ export const ShoppingCart: React.FC<ShoppingCartProps> = ({
                     max={tempDiscountType === 'percentage' ? 100 : summary.subtotal}
                     step={tempDiscountType === 'percentage' ? 1 : 1000}
                     onChange={(_, data) => {
-                      if (data.value !== undefined) {
+                      if (data.value !== undefined && data.value !== null) {
                         setTempDiscount(data.value);
                       }
                     }}

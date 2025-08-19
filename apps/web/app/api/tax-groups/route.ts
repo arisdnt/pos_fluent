@@ -185,9 +185,14 @@ function sortTaxGroups(taxGroups: TaxGroup[], sortBy: string, sortOrder: string)
     let aValue = a[sortBy as keyof TaxGroup];
     let bValue = b[sortBy as keyof TaxGroup];
 
-    if (typeof aValue === 'string') {
+    // Handle undefined values
+    if (aValue == null && bValue == null) return 0;
+    if (aValue == null) return sortOrder === 'asc' ? 1 : -1;
+    if (bValue == null) return sortOrder === 'asc' ? -1 : 1;
+
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
       aValue = aValue.toLowerCase();
-      bValue = (bValue as string).toLowerCase();
+      bValue = bValue.toLowerCase();
     }
 
     if (aValue < bValue) {

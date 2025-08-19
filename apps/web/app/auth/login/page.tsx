@@ -31,11 +31,11 @@ import {
   MessageBarTitle
 } from '@fluentui/react-components';
 import {
-  Store24Regular,
+  Building24Regular,
   Eye24Regular,
   EyeOff24Regular,
   Person24Regular,
-  Lock24Regular,
+  LockClosed24Regular,
   Shield24Regular,
   Info24Regular,
   Warning24Regular,
@@ -61,7 +61,7 @@ const loginSchema = z.object({
     .min(1, 'Password harus diisi')
     .min(6, 'Password minimal 6 karakter')
     .max(100, 'Password maksimal 100 karakter'),
-  rememberMe: z.boolean().optional(),
+  remember_me: z.boolean().optional(),
   branch: z.string().optional()
 });
 
@@ -136,7 +136,7 @@ export default function LoginPage() {
     defaultValues: {
       username: '',
       password: '',
-      rememberMe: false,
+      remember_me: false,
       branch: 'CAB001'
     },
     mode: 'onChange'
@@ -203,8 +203,8 @@ export default function LoginPage() {
       await login({
         username: data.username,
         password: data.password,
-        rememberMe: data.rememberMe,
-        branch: data.branch
+        remember_me: data.remember_me,
+        branch_id: data.branch
       });
       
       // Redirect to dashboard or intended page
@@ -220,7 +220,7 @@ export default function LoginPage() {
   };
 
   const handleForgotPassword = () => {
-    toast.info('Fitur reset password akan segera tersedia.');
+    toast('Fitur reset password akan segera tersedia.');
   };
 
   const handleDemoLogin = (userType: 'admin' | 'cashier' | 'manager') => {
@@ -267,7 +267,7 @@ export default function LoginPage() {
         <div className="text-center space-y-4">
           <div className="flex justify-center">
             <div className="p-4 bg-blue-600 rounded-full shadow-lg">
-              <Store24Regular className="w-8 h-8 text-white" />
+              <Building24Regular className="w-8 h-8 text-white" />
             </div>
           </div>
           <div>
@@ -371,7 +371,7 @@ export default function LoginPage() {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Masukkan password Anda"
-                    contentBefore={<Lock24Regular className="text-gray-500" />}
+                    contentBefore={<LockClosed24Regular className="text-gray-500" />}
                     contentAfter={
                       <Button
                         appearance="transparent"
@@ -419,7 +419,7 @@ export default function LoginPage() {
               {/* Remember Me */}
               <div className="flex items-center justify-between">
                 <Checkbox
-                  {...register('rememberMe')}
+                  {...register('remember_me')}
                   label="Ingat saya"
                   disabled={isLoading}
                 />

@@ -15,6 +15,7 @@ import {
   Badge,
   Divider,
   Input,
+  Textarea,
   Dialog,
   DialogTrigger,
   DialogSurface,
@@ -27,16 +28,15 @@ import {
   MessageBarBody
 } from '@fluentui/react-components';
 import {
-  ShoppingCart24Regular,
+  ShoppingBag24Regular,
   Delete24Regular,
   Add24Regular,
   Subtract24Regular,
   Edit24Regular,
-  Discount24Regular,
+  Tag24Regular,
   Calculator24Regular,
   Warning24Filled,
-  Info24Regular,
-  ShoppingBag24Regular
+  Info24Regular
 } from '@fluentui/react-icons';
 import { formatCurrency } from '@/lib/utils/format';
 import { cn } from '@/lib/utils/cn';
@@ -213,7 +213,7 @@ function CartItemComponent({
             {/* Discount Info */}
             {item.discount > 0 && (
               <div className="flex items-center space-x-1 mt-1">
-                <Discount24Regular className="w-3 h-3 text-green-600" />
+                <Tag24Regular className="w-3 h-3 text-green-600" />
                 <Caption1 className="text-green-600">
                   Diskon: {item.discountType === 'percentage' ? `${item.discount}%` : formatCurrency(item.discount)}
                 </Caption1>
@@ -236,7 +236,7 @@ function CartItemComponent({
               <Tooltip content="Edit diskon" relationship="label">
                 <Button
                   appearance="subtle"
-                  icon={<Discount24Regular />}
+                  icon={<Tag24Regular />}
                   size="small"
                   onClick={() => setShowDiscountDialog(true)}
                 />
@@ -347,7 +347,7 @@ function CartItemComponent({
                 <Input
                   type="number"
                   placeholder="0"
-                  value={discountValue || ''}
+                  value={discountValue ? discountValue.toString() : ''}
                   onChange={(e) => setDiscountValue(Number(e.target.value))}
                   contentBefore={discountType === 'amount' ? <Text>Rp</Text> : undefined}
                   contentAfter={discountType === 'percentage' ? <Text>%</Text> : undefined}
@@ -403,11 +403,10 @@ function CartItemComponent({
             <DialogContent className="space-y-4">
               <div className="space-y-2">
                 <Text weight="semibold">Catatan:</Text>
-                <Input
+                <Textarea
                   placeholder="Masukkan catatan untuk item ini..."
                   value={noteValue}
                   onChange={(e) => setNoteValue(e.target.value)}
-                  multiline
                   rows={3}
                 />
               </div>
@@ -465,7 +464,7 @@ export default function ShoppingCart({
       <div className="p-4 border-b border-gray-200 flex-shrink-0">
         <div className="flex items-center justify-between mb-3">
           <Title3 className="flex items-center space-x-2">
-            <ShoppingCart24Regular />
+            <ShoppingBag24Regular />
             <span>Keranjang Belanja</span>
           </Title3>
           <Badge appearance="filled" color="brand">
@@ -479,7 +478,7 @@ export default function ShoppingCart({
               appearance="outline"
               icon={<Calculator24Regular />}
               size="small"
-              onClick={() => toast.info('Kalkulator akan segera tersedia')}
+              onClick={() => toast('Kalkulator akan segera tersedia')}
             >
               Kalkulator
             </Button>

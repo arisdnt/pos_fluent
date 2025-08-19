@@ -19,6 +19,7 @@ interface User {
   full_name: string;
   phone?: string;
   is_active: boolean;
+  company_id?: string;
   last_login_at?: Date;
   created_at: Date;
   updated_at: Date;
@@ -188,23 +189,24 @@ export async function GET(request: NextRequest): Promise<NextResponse<ProfileRes
         is_active: true,
         company_id: 'test-company-001',
         created_at: new Date(),
-        updated_at: new Date(),
-        roles: [
-          {
-            role_id: 'test-role-001',
-            role_name: 'Administrator',
-            branch_id: 'test-branch-001',
-            branch_name: 'Cabang Testing',
-            branch_code: 'TEST001',
-            permissions: ['*']
-          }
-        ]
+        updated_at: new Date()
       };
+
+      const dummyRoles: UserRole[] = [
+        {
+          role_id: 'test-role-001',
+          role_name: 'Administrator',
+          branch_id: 'test-branch-001',
+          branch_name: 'Cabang Testing',
+          branch_code: 'TEST001',
+          permissions: ['*']
+        }
+      ];
       
-      const allPermissions = getAllPermissions(dummyUser.roles);
-      const currentBranch = dummyUser.roles[0];
+      const allPermissions = getAllPermissions(dummyRoles);
+      const currentBranch = dummyRoles[0];
       
-      const profileData: ProfileData = {
+      const profileData = {
         user: {
           id: dummyUser.id,
           username: dummyUser.username,
@@ -213,18 +215,19 @@ export async function GET(request: NextRequest): Promise<NextResponse<ProfileRes
           phone: dummyUser.phone,
           is_active: dummyUser.is_active,
           company_id: dummyUser.company_id,
-          created_at: dummyUser.created_at.toISOString(),
-          updated_at: dummyUser.updated_at.toISOString()
+          created_at: dummyUser.created_at,
+          updated_at: dummyUser.updated_at
         },
-        roles: dummyUser.roles,
+        roles: dummyRoles,
         permissions: allPermissions,
         current_branch: {
           id: currentBranch.branch_id,
           name: currentBranch.branch_name,
           code: currentBranch.branch_code
         },
-        session: {
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        session_info: {
+          issued_at: new Date(),
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000),
           time_remaining: '24 jam 0 menit'
         }
       };

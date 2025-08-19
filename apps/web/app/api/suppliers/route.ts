@@ -258,15 +258,20 @@ function sortSuppliers(suppliers: Supplier[], sortBy: string, sortOrder: string)
     let aValue = a[sortBy as keyof Supplier];
     let bValue = b[sortBy as keyof Supplier];
 
-    if (typeof aValue === 'string') {
+    // Handle undefined values
+    if (aValue == null && bValue == null) return 0;
+    if (aValue == null) return sortOrder === 'asc' ? 1 : -1;
+    if (bValue == null) return sortOrder === 'asc' ? -1 : 1;
+
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
       aValue = aValue.toLowerCase();
-      bValue = (bValue as string).toLowerCase();
+      bValue = bValue.toLowerCase();
     }
 
-    if (aValue < bValue) {
+    if (aValue! < bValue!) {
       return sortOrder === 'asc' ? -1 : 1;
     }
-    if (aValue > bValue) {
+    if (aValue! > bValue!) {
       return sortOrder === 'asc' ? 1 : -1;
     }
     return 0;
@@ -326,8 +331,8 @@ export async function GET(request: NextRequest) {
     };
 
     // Get unique cities and provinces for filters
-    const cities = [...new Set(mockSuppliers.map(s => s.city).filter(Boolean))].sort();
-    const provinces = [...new Set(mockSuppliers.map(s => s.province).filter(Boolean))].sort();
+    const cities = Array.from(new Set(mockSuppliers.map(s => s.city).filter(Boolean) as string[])).sort();
+    const provinces = Array.from(new Set(mockSuppliers.map(s => s.province).filter(Boolean) as string[])).sort();
 
     return NextResponse.json({
       success: true,
