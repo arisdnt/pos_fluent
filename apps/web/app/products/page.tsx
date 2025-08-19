@@ -43,6 +43,7 @@ import {
 import { useAuth } from '@/lib/auth/use-auth';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { MainLayout } from '@/app/components/layout/MainLayout';
+import { useKeyboard } from '@/lib/keyboard/keyboard-provider';
 import { formatCurrency } from '@/lib/utils/format';
 import toast from 'react-hot-toast';
 
@@ -358,6 +359,7 @@ function ProductDetail({ product }: { product: Product | null }) {
 }
 
 function ProductsPageContent() {
+  const { registerAction, unregisterAction } = useKeyboard();
   const [products] = useState<Product[]>(mockProducts);
   const [stats] = useState<ProductStats>(mockProductStats);
   const [categories] = useState<Category[]>(mockCategories);
@@ -400,23 +402,32 @@ function ProductsPageContent() {
   });
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        switch (e.key) {
-          case 'k':
-            e.preventDefault();
-            searchInputRef.current?.focus();
-            break;
-          case 'n':
-            e.preventDefault();
-            setShowAddDialog(true);
-            break;
-        }
-      }
-    };
+    // Register Products-specific keyboard shortcuts
+    registerAction('products-focus-search', () => {
+      searchInputRef.current?.focus();
+    });
+    
+    registerAction('products-add-new', () => {
+      setShowAddDialog(true);
+    });
+    
+    registerAction('products-clear-filters', () => {
+      setGlobalFilter('');
+      setCategoryFilter('all');
+      setStatusFilter('all');
+      toast.success('Filter dikosongkan');
+    });
+    
+    registerAction('products-export-data', () => {
+      toast.success('Mengekspor data produk');
+    });
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      unregisterAction('products-focus-search');
+      unregisterAction('products-add-new');
+      unregisterAction('products-clear-filters');
+      unregisterAction('products-export-data');
+    };
   }, []);
 
   useEffect(() => {

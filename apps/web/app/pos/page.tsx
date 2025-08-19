@@ -60,6 +60,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { formatCurrency, formatDateTime } from '@/lib/utils/format';
 import { cn } from '@/lib/utils/cn';
 import { MainLayout } from '@/app/components/layout/MainLayout';
+import { useKeyboard } from '@/lib/keyboard/keyboard-provider';
 import toast from 'react-hot-toast';
 
 // ======================================================================
@@ -231,6 +232,7 @@ const paymentMethods: PaymentMethod[] = [
 function POSPageContent() {
   const router = useRouter();
   const { user } = useAuth();
+  const { registerAction, unregisterAction } = useKeyboard();
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   
   // State management
@@ -278,6 +280,53 @@ function POSPageContent() {
 
   const totals = calculateCartTotals();
   const change = amountPaid - totals.total;
+
+  // ======================================================================
+  // KEYBOARD SHORTCUTS
+  // ======================================================================
+
+  useEffect(() => {
+    // Register POS-specific keyboard shortcuts
+    registerAction('pos-clear-cart', () => {
+      setCart([]);
+      toast.success('Keranjang dikosongkan');
+    });
+    
+    registerAction('pos-focus-search', () => {
+      barcodeInputRef.current?.focus();
+    });
+    
+    registerAction('pos-checkout', () => {
+      if (cart.length > 0) {
+        // Trigger checkout process
+        toast.success('Memulai proses checkout');
+      } else {
+        toast.error('Keranjang masih kosong');
+      }
+    });
+    
+    registerAction('pos-hold-transaction', () => {
+      if (cart.length > 0) {
+        // Hold current transaction
+        toast.success('Transaksi ditahan');
+      }
+    });
+    
+    registerAction('pos-print-receipt', () => {
+      if (cart.length > 0) {
+        // Print receipt
+        toast.success('Mencetak struk');
+      }
+    });
+
+    return () => {
+      unregisterAction('pos-clear-cart');
+      unregisterAction('pos-focus-search');
+      unregisterAction('pos-checkout');
+      unregisterAction('pos-hold-transaction');
+      unregisterAction('pos-print-receipt');
+    };
+  }, [registerAction, unregisterAction, cart.length]);
 
   // ======================================================================
   // QUANTITY MODAL HANDLERS

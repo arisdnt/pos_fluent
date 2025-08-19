@@ -45,6 +45,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { formatCurrency } from '@/lib/utils/format';
 import { formatDateTime } from '@/lib/utils/date';
 import { cn } from '@/lib/utils/cn';
+import { useKeyboard } from '@/lib/keyboard/keyboard-provider';
 import { SalesTrendChart, PaymentMethodChart, ProductCategoryChart, mockChartData } from '@/components/reports/ReportCharts';
 import { MainLayout } from '@/app/components/layout/MainLayout';
 
@@ -265,6 +266,7 @@ function DashboardContent() {
   const [isLoading, setIsLoading] = useState(true);
   
   const { user, hasPermission } = useAuth();
+  const { registerAction, unregisterAction } = useKeyboard();
   const router = useRouter();
 
   // ======================================================================
@@ -286,6 +288,44 @@ function DashboardContent() {
     
     loadData();
   }, []);
+
+  useEffect(() => {
+    // Register Dashboard-specific keyboard shortcuts
+    registerAction('dashboard-refresh-data', () => {
+      setIsLoading(true);
+      // Reload dashboard data
+      setTimeout(() => {
+        setStats(mockStats);
+        setRecentTransactions(mockRecentTransactions);
+        setIsLoading(false);
+      }, 1000);
+    });
+    
+    registerAction('dashboard-quick-pos', () => {
+      if (hasPermission('pos.create')) {
+        router.push('/pos');
+      }
+    });
+    
+    registerAction('dashboard-quick-products', () => {
+      if (hasPermission('products.read')) {
+        router.push('/products');
+      }
+    });
+    
+    registerAction('dashboard-quick-reports', () => {
+      if (hasPermission('reports.read')) {
+        router.push('/reports');
+      }
+    });
+
+    return () => {
+      unregisterAction('dashboard-refresh-data');
+      unregisterAction('dashboard-quick-pos');
+      unregisterAction('dashboard-quick-products');
+      unregisterAction('dashboard-quick-reports');
+    };
+  }, [registerAction, unregisterAction, hasPermission, router]);
 
   // ======================================================================
   // HANDLERS
